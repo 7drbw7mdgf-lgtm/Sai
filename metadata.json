@@ -1,0 +1,7 @@
+{
+  "name": "Project Guru",
+  "description": "An interactive Gantt chart application for project management, featuring a dynamic timeline, task dependencies, and team collaboration tools. Built with React and Tailwind CSS for a modern and responsive user experience.",
+  "requestFramePermissions": [],
+  "prompt": "",
+  "majorCapabilities": []
+}

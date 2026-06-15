@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Guru</title>
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoVBL5gI9kknDUH2soBHFrDCVgjLAg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:wght@400;600;700&family=Inconsolata:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary-50: 239 246 255;
+      --color-primary-100: 219 234 254;
+      --color-primary-200: 191 219 254;
+      --color-primary-300: 147 197 253;
+      --color-primary-500: 59 130 246;
+      --color-primary-600: 37 99 235;
+      --color-primary-700: 29 78 216;
+      --color-primary-800: 30 64 175;
+
+      --font-family-body: 'Inter', sans-serif;
+      --font-size-base: 16px;
+      --text-color-base: #374151;
+      --text-color-heading: #111827;
+      --text-color-link: #2563eb;
+
+      --sidebar-bg: #ffffff;
+      --sidebar-icon-color: #6b7280;
+
+      /* Notes Theming Variables */
+      --notes-font-family: 'Inter', sans-serif;
+      --notes-font-size: 16px;
+      --notes-color-h1: #111827;
+      --notes-color-h2: #1f2937;
+      --notes-color-h3: #374151;
+      --notes-color-strong: #111827;
+      --notes-color-em: #111827;
+      --notes-color-hashtag-bg: #e5e7eb;
+      --notes-color-hashtag-text: #4b5563;
+      
+      --notes-callout-info-bg: #eff6ff;
+      --notes-callout-info-border: #3b82f6;
+      --notes-callout-info-text: #1e40af;
+
+      --notes-callout-warning-bg: #fffbeb;
+      --notes-callout-warning-border: #f59e0b;
+      --notes-callout-warning-text: #92400e;
+
+      --notes-callout-success-bg: #f0fdf4;
+      --notes-callout-success-border: #22c55e;
+      --notes-callout-success-text: #14532d;
+      
+      --notes-callout-danger-bg: #fef2f2;
+      --notes-callout-danger-border: #ef4444;
+      --notes-callout-danger-text: #991b1b;
+      
+      --notes-callout-text-bg: #f3f4f6;
+      --notes-callout-text-border: #9ca3af;
+      --notes-callout-text-text: #374151;
+    }
+    html.dark {
+      color-scheme: dark;
+      --text-color-base: #d1d5db;
+      --text-color-heading: #f9fafb;
+      --text-color-link: #60a5fa;
+
+      --sidebar-bg: #111827;
+      --sidebar-icon-color: #9ca3af;
+
+      /* Dark Mode Notes Theming Variables */
+       --notes-color-h1: #f9fafb;
+      --notes-color-h2: #f3f4f6;
+      --notes-color-h3: #e5e7eb;
+      --notes-color-strong: #f9fafb;
+      --notes-color-em: #f9fafb;
+      --notes-color-hashtag-bg: #374151;
+      --notes-color-hashtag-text: #d1d5db;
+      
+      --notes-callout-info-bg: #1e293b;
+      --notes-callout-info-border: #60a5fa;
+      --notes-callout-info-text: #dbeafe;
+
+      --notes-callout-warning-bg: #422006;
+      --notes-callout-warning-border: #fcd34d;
+      --notes-callout-warning-text: #fef3c7;
+
+      --notes-callout-success-bg: #14532d;
+      --notes-callout-success-border: #4ade80;
+      --notes-callout-success-text: #dcfce7;
+      
+      --notes-callout-danger-bg: #450a0a;
+      --notes-callout-danger-border: #f87171;
+      --notes-callout-danger-text: #fecaca;
+
+      --notes-callout-text-bg: #374151;
+      --notes-callout-text-border: #6b7280;
+      --notes-callout-text-text: #e5e7eb;
+    }
+    body {
+      overscroll-behavior: none;
+      font-family: var(--font-family-body);
+      font-size: var(--font-size-base);
+    }
+    .prose {
+      color: var(--text-color-base);
+    }
+    .prose h1, .prose h2, .prose h3, .prose h4, .prose strong {
+      color: var(--text-color-heading);
+    }
+    .prose a {
+      color: var(--text-color-link);
+    }
+
+    .notes-prose {
+      font-family: var(--notes-font-family);
+      font-size: var(--notes-font-size);
+    }
+    .notes-prose h1 { color: var(--notes-color-h1); }
+    .notes-prose h2 { color: var(--notes-color-h2); }
+    .notes-prose h3 { color: var(--notes-color-h3); }
+    .notes-prose strong { color: var(--notes-color-strong); }
+    .notes-prose em { color: var(--notes-color-em); }
+
+    .hashtag {
+      background-color: var(--notes-color-hashtag-bg);
+      color: var(--notes-color-hashtag-text);
+      padding-left: 0.5rem; padding-right: 0.5rem;
+      padding-top: 0.125rem; padding-bottom: 0.125rem;
+      border-radius: 9999px;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .completion-handle:hover > div {
+        transform: scale(1.2);
+    }
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes fade-out {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(4px); }
+    }
+    .animate-fade-out {
+        animation: fade-out 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes fade-in-slow {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-slow {
+        animation: fade-in-slow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes fade-out-slow {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(4px); }
+    }
+    .animate-fade-out-slow {
+        animation: fade-out-slow 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes magnetic-snap {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1.05); }
+    }
+     @keyframes slide-in-right {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+    .animate-slide-in-right {
+        animation: slide-in-right 0.35s cubic-bezier(0.1, 0.7, 0.3, 1);
+    }
+
+    @keyframes slide-out-right {
+        from { transform: translateX(0); }
+        to { transform: translateX(100%); }
+    }
+    .animate-slide-out-right {
+        animation: slide-out-right 0.35s cubic-bezier(0.7, 0, 0.9, 0.3) forwards;
+    }
+
+    @keyframes slide-in-up {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    .animate-slide-in-up {
+        animation: slide-in-up 0.35s cubic-bezier(0.1, 0.7, 0.3, 1);
+    }
+
+    @keyframes slide-out-down {
+        from { transform: translateY(0); }
+        to { transform: translateY(100%); }
+    }
+    .animate-slide-out-down {
+        animation: slide-out-down 0.35s cubic-bezier(0.7, 0, 0.9, 0.3) forwards;
+    }
+
+    /* Custom progress slider styles */
+    input[type=range].styled-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+      width: 100%;
+    }
+    input[type=range].styled-slider:focus {
+        outline: none;
+    }
+    
+    /* Track */
+    input[type=range].styled-slider::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8px;
+      cursor: pointer;
+      background: var(--progress-color, rgb(var(--color-primary-600)));
+      border-radius: 4px;
+      opacity: 0.3;
+      transition: opacity 0.2s;
+    }
+    html.dark input[type=range].styled-slider::-webkit-slider-runnable-track {
+        opacity: 0.4;
+    }
+    input[type=range].styled-slider:hover::-webkit-slider-runnable-track {
+      opacity: 0.5;
+    }
+    html.dark input[type=range].styled-slider:hover::-webkit-slider-runnable-track {
+        opacity: 0.6;
+    }
+    input[type=range].styled-slider::-moz-range-track {
+      width: 100%;
+      height: 8px;
+      cursor: pointer;
+      background: var(--progress-color, rgb(var(--color-primary-600)));
+      border-radius: 4px;
+      opacity: 0.3;
+      transition: opacity 0.2s;
+    }
+    input[type=range].styled-slider:hover::-moz-range-track {
+        opacity: 0.5;
+    }
+
+    /* Thumb */
+    input[type=range].styled-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 20px;
+      width: 20px;
+      background-color: #fff;
+      border-radius: 50%;
+      border: 3px solid var(--progress-color, rgb(var(--color-primary-600)));
+      cursor: pointer;
+      margin-top: -6px; /* (track_height - thumb_height)/2 */
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    input[type=range].styled-slider::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+      background-color: #fff;
+      border-radius: 50%;
+      border: 3px solid var(--progress-color, rgb(var(--color-primary-600)));
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .dragging-node {
+        cursor: grabbing !important;
+        transition: none !important;
+        z-index: 100 !important;
+        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    }
+
+    /* Custom Scrollbar Styles */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #d1d5db;
+      border-radius: 10px;
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+    html.dark ::-webkit-scrollbar-thumb {
+        background-color: #4b5563;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #9ca3af;
+    }
+    html.dark ::-webkit-scrollbar-thumb:hover {
+        background-color: #6b7280;
+    }
+    
+    /* Hides horizontal scrollbar only */
+    .no-x-scrollbar::-webkit-scrollbar:horizontal {
+        display: none;
+        height: 0px;
+    }
+    
+    /* Callout Styles */
+    .callout {
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left-width: 4px;
+        margin: 1em 0;
+    }
+    .callout-title {
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+    .callout-content {
+        font-size: 0.9em;
+    }
+    .callout-content p {
+        margin: 0;
+    }
+    .callout.info {
+        background-color: var(--notes-callout-info-bg);
+        border-color: var(--notes-callout-info-border);
+        color: var(--notes-callout-info-text);
+    }
+    .callout.warning {
+        background-color: var(--notes-callout-warning-bg);
+        border-color: var(--notes-callout-warning-border);
+        color: var(--notes-callout-warning-text);
+    }
+    .callout.success {
+        background-color: var(--notes-callout-success-bg);
+        border-color: var(--notes-callout-success-border);
+        color: var(--notes-callout-success-text);
+    }
+     .callout.danger {
+        background-color: var(--notes-callout-danger-bg);
+        border-color: var(--notes-callout-danger-border);
+        color: var(--notes-callout-danger-text);
+    }
+    .callout.text {
+        background-color: var(--notes-callout-text-bg);
+        border-color: var(--notes-callout-text-border);
+        color: var(--notes-callout-text-text);
+    }
+
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.9.0",
+    "@heroicons/react/": "https://aistudiocdn.com/@heroicons/react@^2.2.0/"
+  }
+}
+</script>
+<script>
+  // Prevent FOUC for dark mode
+  try {
+    const settings = localStorage.getItem('project-guru-settings');
+    if (settings && JSON.parse(settings).darkMode) {
+      document.documentElement.classList.add('dark');
+    }
+  } catch (e) { console.error(e); }
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
