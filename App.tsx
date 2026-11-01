@@ -480,7 +480,7 @@ const App: React.FC = () => {
                     onRequestEditTask={setEditingTaskId}
                     onRequestAddTask={() => setIsAddTaskPanelOpen(true)}
                 />;
-            case View.GANTT: return <GanttChart projectData={projectData} onSetData={setProjectData} zoom={zoom} ganttViewMode={ganttViewMode} onGanttViewModeChange={setGanttViewMode} onRequestAddTask={() => { setIsAddTaskPanelOpen(true); }} onRequestEditTask={setEditingTaskId} dependencyLink={dependencyLink} onStartDependencyLink={handleStartLinking} onLinkTask={handleLinkTask} onRemoveDependency={handleRemoveDependency} />;
+            case View.GANTT: return <GanttChart projectData={projectData} onSetData={setProjectData} zoom={zoom} ganttViewMode={ganttViewMode} onGanttViewModeChange={setGanttViewMode} onRequestAddTask={() => { setIsAddTaskPanelOpen(true); }} onRequestEditTask={setEditingTaskId} dependencyLink={dependencyLink} onStartDependencyLink={handleStartLinking} onLinkTask={handleLinkTask} onCancelLinking={() => setDependencyLink(null)} onRemoveDependency={handleRemoveDependency} />;
             case View.TASKS: return <TasksView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} />;
             case View.CALENDAR: return <CalendarView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} onRequestEditMeeting={setEditingMeetingId} />;
             case View.NOTES: return <TasksView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} />;

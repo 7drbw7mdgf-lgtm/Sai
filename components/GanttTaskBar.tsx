@@ -2,18 +2,22 @@
 import React, { useState, useRef } from 'react';
 import { Task } from '../types';
 import { diffInDays, addDays } from '../services/dateUtils';
+import { DragPreview } from './ganttLayout';
 
 interface GanttTaskBarProps {
     task: Task;
     projectStartDate: Date;
     rowTop: number;
-    barHeight: number;
+    rowHeight: number;
     zoom: number;
     isSelected: boolean;
     onSelectTask: (taskId: string) => void;
     onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
+    onDragPreview: (preview: DragPreview | null) => void;
+    onDragCommit: (taskId: string, startDate: Date, endDate: Date) => void;
     onRequestEditTask: (taskId: string) => void;
     isLinking: boolean;
+    isLinkSource: boolean;
     onLinkTask: (toTaskId: string) => void;
     onStartDependencyLink: (taskId: string, type: 'prerequisite' | 'postrequisite') => void;
 }
@@ -28,21 +32,29 @@ const SPARK_BAR_THEMES: { [key: string]: { bg: string; border: string; fill: str
     slate:    { bg: '#f8fafc', border: '#cbd5e1', fill: '#64748b', text: '#334155', dot: '#475569' },
 };
 
+const BAR_HEIGHT = 36;
+/** Pixels the pointer must travel before a press becomes a drag (so plain clicks still select). */
+const DRAG_THRESHOLD = 3;
+
+type Interaction = 'drag' | 'resize-left' | 'resize-right';
+
 const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
-    task, projectStartDate, rowTop, barHeight, zoom, isSelected,
-    onSelectTask, onTaskUpdate, onRequestEditTask, isLinking, onLinkTask, onStartDependencyLink
+    task, projectStartDate, rowTop, rowHeight, zoom, isSelected,
+    onSelectTask, onTaskUpdate, onDragPreview, onDragCommit, onRequestEditTask,
+    isLinking, isLinkSource, onLinkTask, onStartDependencyLink
 }) => {
     const barRef = useRef<HTMLDivElement>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isResizingLeft, setIsResizingLeft] = useState(false);
-    const [isResizingRight, setIsResizingRight] = useState(false);
+    const [interaction, setInteraction] = useState<Interaction | null>(null);
     const [isChangingCompletion, setIsChangingCompletion] = useState(false);
-    const dragStartInfo = useRef({ x: 0, originalStart: new Date(), originalEnd: new Date() });
+    // Local value while the completion handle is dragged; committed once on mouse-up.
+    const [completionPreview, setCompletionPreview] = useState<number | null>(null);
+    const completion = completionPreview ?? task.completion;
+    const didDragRef = useRef(false);
 
     const taskStartOffset = diffInDays(projectStartDate, task.startDate);
     const taskDuration = diffInDays(task.startDate, task.endDate) + 1;
-    const barWidth = taskDuration * zoom;
-    const isCompleted = task.completion >= 100;
+    const barWidth = Math.max(taskDuration * zoom, 6);
+    const isCompleted = completion >= 100;
 
     // Pick deterministic theme
     const themeKeys = ['coral', 'yellow', 'blue', 'green', 'lavender', 'slate'];
@@ -54,43 +66,51 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
     // If bar is too small, show text outside
     const isCompact = barWidth < 120;
 
-    const handleMouseDown = (e: React.MouseEvent, type: 'drag' | 'resize-left' | 'resize-right') => {
+    const handleMouseDown = (e: React.MouseEvent, type: Interaction) => {
+        if (e.button !== 0 || isLinking) return;
         e.stopPropagation();
-        if (isLinking) return;
-        
-        dragStartInfo.current = { x: e.clientX, originalStart: task.startDate, originalEnd: task.endDate };
+        e.preventDefault();
 
-        if (type === 'drag') setIsDragging(true);
-        else if (type === 'resize-left') setIsResizingLeft(true);
-        else if (type === 'resize-right') setIsResizingRight(true);
+        const startX = e.clientX;
+        const originalStart = task.startDate;
+        const originalEnd = task.endDate;
+        let latest = { startDate: originalStart, endDate: originalEnd };
+        didDragRef.current = false;
 
         const handleMouseMove = (moveEvent: MouseEvent) => {
-            const dx = moveEvent.clientX - dragStartInfo.current.x;
+            const dx = moveEvent.clientX - startX;
+            if (!didDragRef.current) {
+                if (Math.abs(dx) < DRAG_THRESHOLD) return;
+                didDragRef.current = true;
+                setInteraction(type);
+                document.body.style.cursor = type === 'drag' ? 'grabbing' : 'ew-resize';
+                document.body.style.userSelect = 'none';
+            }
             const daysMoved = Math.round(dx / zoom);
 
             if (type === 'drag') {
-                const newStartDate = addDays(dragStartInfo.current.originalStart, daysMoved);
-                const newEndDate = addDays(dragStartInfo.current.originalEnd, daysMoved);
-                onTaskUpdate(task.id, { startDate: newStartDate, endDate: newEndDate });
+                latest = { startDate: addDays(originalStart, daysMoved), endDate: addDays(originalEnd, daysMoved) };
             } else if (type === 'resize-left') {
-                const newStartDate = addDays(dragStartInfo.current.originalStart, daysMoved);
-                if (newStartDate <= task.endDate) {
-                    onTaskUpdate(task.id, { startDate: newStartDate });
-                }
-            } else if (type === 'resize-right') {
-                const newEndDate = addDays(dragStartInfo.current.originalEnd, daysMoved);
-                if (newEndDate >= task.startDate) {
-                    onTaskUpdate(task.id, { endDate: newEndDate });
-                }
+                const s = addDays(originalStart, daysMoved);
+                latest = { startDate: s > originalEnd ? originalEnd : s, endDate: originalEnd };
+            } else {
+                const en = addDays(originalEnd, daysMoved);
+                latest = { startDate: originalStart, endDate: en < originalStart ? originalStart : en };
             }
+            // Preview only; project data (and undo history) is written once on mouse-up.
+            onDragPreview({ taskId: task.id, ...latest });
         };
 
         const handleMouseUp = () => {
-            setIsDragging(false);
-            setIsResizingLeft(false);
-            setIsResizingRight(false);
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            setInteraction(null);
+            if (!didDragRef.current) return;
+            const changed = diffInDays(originalStart, latest.startDate) !== 0 || diffInDays(originalEnd, latest.endDate) !== 0;
+            if (changed) onDragCommit(task.id, latest.startDate, latest.endDate);
+            else onDragPreview(null);
         };
 
         document.addEventListener('mousemove', handleMouseMove);
@@ -105,12 +125,13 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
         setIsChangingCompletion(true);
         onSelectTask(task.id);
 
+        let latestCompletion = task.completion;
         const updateCompletionFromPointer = (clientX: number) => {
             if (!barRef.current) return;
             const rect = barRef.current.getBoundingClientRect();
             const ratio = rect.width > 0 ? (clientX - rect.left) / rect.width : 0;
-            const nextCompletion = Math.max(0, Math.min(100, Math.round(ratio * 100)));
-            onTaskUpdate(task.id, { completion: nextCompletion });
+            latestCompletion = Math.max(0, Math.min(100, Math.round(ratio * 100)));
+            setCompletionPreview(latestCompletion);
         };
 
         updateCompletionFromPointer(e.clientX);
@@ -121,6 +142,8 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
 
         const handleMouseUp = () => {
             setIsChangingCompletion(false);
+            setCompletionPreview(null);
+            if (latestCompletion !== task.completion) onTaskUpdate(task.id, { completion: latestCompletion });
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
@@ -141,12 +164,12 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
 
     return (
         <div
-            className={`absolute pointer-events-auto transition-all duration-200 ease-out`}
+            className="absolute pointer-events-auto"
             style={{
-                top: rowTop + 10,
+                top: rowTop + (rowHeight - BAR_HEIGHT) / 2,
                 left: taskStartOffset * zoom,
                 width: barWidth,
-                height: barHeight,
+                height: BAR_HEIGHT,
             }}
         >
             {/* The Bar itself */}
@@ -157,10 +180,12 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
                 aria-label={isLinking ? `Create dependency with ${task.name}` : `Select ${task.name}`}
                 onClick={(e) => {
                     if (isDependencyNodeEvent(e.target)) return;
+                    // A drag ends with a click event; don't treat it as a selection.
+                    if (didDragRef.current) { didDragRef.current = false; return; }
                     isLinking ? onLinkTask(task.id) : onSelectTask(task.id);
                 }}
                 onDoubleClick={(e) => {
-                    if (isDependencyNodeEvent(e.target)) return;
+                    if (isDependencyNodeEvent(e.target) || isLinking) return;
                     onRequestEditTask(task.id);
                 }}
                 onMouseDown={(e) => {
@@ -173,8 +198,8 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
                         isLinking ? onLinkTask(task.id) : onSelectTask(task.id);
                     }
                 }}
-                className={`group/bar relative w-full h-full rounded-xl shadow-2xs hover:shadow-md transition-all select-none
-                    ${isLinking ? 'hover:ring-2 ring-[#ef754e] cursor-alias' : 'cursor-grab active:cursor-grabbing'}
+                className={`group/bar relative w-full h-full rounded-xl shadow-2xs hover:shadow-md transition-shadow select-none
+                    ${isLinking ? (isLinkSource ? 'ring-2 ring-[#ef754e] cursor-not-allowed' : 'hover:ring-2 ring-[#ef754e] cursor-alias') : (interaction === 'drag' ? 'cursor-grabbing shadow-lg' : 'cursor-grab')}
                     ${isSelected ? 'ring-2 ring-[#ef754e] ring-offset-2 dark:ring-offset-gray-900 shadow-sm' : ''}
                     ${isCompleted ? 'opacity-80 hover:opacity-95' : ''}
                     ${isChangingCompletion ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-gray-900' : ''}
@@ -187,7 +212,7 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
                 {/* Progress fill */}
                 <div 
                     className="absolute top-0 left-0 h-full rounded-xl overflow-hidden transition-all duration-150" 
-                    style={{ width: `${task.completion}%` }}
+                    style={{ width: `${completion}%` }}
                 >
                     <div 
                         className="w-full h-full opacity-35" 
@@ -224,7 +249,7 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
                             className="text-[10px] font-bold opacity-60 ml-2"
                             style={{ color: theme.text }}
                         >
-                            {task.completion}%
+                            {completion}%
                         </span>
                     )}
                 </div>
@@ -273,21 +298,21 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
                         />
                         <button
                             type="button"
-                            aria-label={`Set ${task.name} completion, currently ${task.completion}%`}
-                            title={`${task.completion}% complete (drag to adjust)`}
+                            aria-label={`Set ${task.name} completion, currently ${completion}%`}
+                            title={`${completion}% complete (drag to adjust)`}
                             onMouseDown={handleCompletionMouseDown}
                             className={`absolute bottom-[-7px] h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white shadow-md transition-transform hover:scale-125 active:scale-95 dark:border-gray-900 z-10 ${
                                 isChangingCompletion ? 'bg-emerald-600 ring-2 ring-emerald-300' : 'bg-emerald-500'
                             }`}
-                            style={{ left: `${task.completion}%` }}
+                            style={{ left: `${completion}%` }}
                         >
-                            <span className="sr-only">{task.completion}% complete</span>
+                            <span className="sr-only">{completion}% complete</span>
                         </button>
                     </>
                 )}
 
                 {/* Resize Handles */}
-                {!isLinking && !isDragging && !isChangingCompletion && (
+                {!isLinking && interaction !== 'drag' && !isChangingCompletion && (
                     <>
                         <div
                             className="absolute left-0 top-0 h-full w-2.5 cursor-ew-resize hover:bg-black/10 rounded-l-xl opacity-0 group-hover/bar:opacity-100 transition-opacity"

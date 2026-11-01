@@ -1,17 +1,13 @@
 
 import React from 'react';
-import { Task, Person, ProjectData, Group, Priority, Assignment } from '../types';
+import { ProjectData } from '../types';
 import { PlusIcon } from './icons/PlusIcon';
 import { FolderPlusIcon } from './icons/FolderPlusIcon';
 import Tooltip from './Tooltip';
 import { ChevronRightIcon } from './icons/ChevronIcons';
 import { PRIORITY_COLORS } from '../constants';
 import { CheckCircleIcon, CheckCircleIconSolid } from './icons/CheckCircleIcon';
-
-type DisplayItem = 
-    | { type: 'task'; data: Task; hasAssignments: boolean } 
-    | { type: 'group'; data: Group }
-    | { type: 'assignment'; data: Assignment };
+import { RowLayout, HEADER_HEIGHT, FOOTER_HEIGHT, BOTTOM_PADDING } from './ganttLayout';
 
 interface TaskSidebarProps {
     width: number;
@@ -20,10 +16,8 @@ interface TaskSidebarProps {
     onSelectTask: (taskId: string) => void;
     onEditTask: (taskId: string) => void;
     selectedTaskId: string | null;
-    displayItems: DisplayItem[];
-    rowHeight: number;
-    groupRowHeight: number;
-    assignmentRowHeight: number;
+    rows: RowLayout[];
+    totalHeight: number;
     collapsedGroups: Set<string>;
     onToggleGroup: (groupId: string) => void;
     expandedTasks: Set<string>;
@@ -42,10 +36,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     onSelectTask, 
     onEditTask, 
     selectedTaskId, 
-    displayItems, 
-    rowHeight, 
-    groupRowHeight,
-    assignmentRowHeight,
+    rows,
+    totalHeight,
     collapsedGroups, 
     onToggleGroup,
     expandedTasks,
@@ -78,9 +70,17 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                     </Tooltip>
                 </div>
             </div>
+            {/* Column header: same height as the timeline's date header so rows line up. */}
+            <div
+                className="flex-shrink-0 flex items-end justify-between px-4 pb-1.5 border-b border-[#e6e6e2] dark:border-gray-800 bg-[#fafaf8] dark:bg-gray-800/60 text-[10px] font-bold uppercase tracking-wider text-[#7a8472] dark:text-gray-500"
+                style={{ height: HEADER_HEIGHT }}
+            >
+                <span>Task</span>
+                <span>Start</span>
+            </div>
             <div ref={scrollRef} className="flex-grow overflow-y-hidden overflow-x-hidden bg-white dark:bg-gray-900">
-                <div className="w-full">
-                    {displayItems.map((item) => {
+                <div className="w-full" style={{ height: totalHeight + BOTTOM_PADDING }}>
+                    {rows.map(({ item, height }) => {
                         if (item.type === 'group') {
                             const group = item.data;
                             const isCollapsed = collapsedGroups.has(group.id);
@@ -90,7 +90,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                     key={`group-${group.id}`}
                                     onClick={() => onToggleGroup(group.id)}
                                     className={`flex items-center justify-between px-3 group cursor-pointer bg-[#fafaf8] dark:bg-gray-800/60 border-b border-[#e6e6e2] dark:border-gray-800 font-bold text-xs text-[#292c31] dark:text-gray-200 hover:bg-[#f0efeb] dark:hover:bg-gray-800 transition-all ${dragOverGroupId === group.id ? 'bg-[#fdf2ee] ring-2 ring-[#ef754e]/30 z-10' : ''}`}
-                                    style={{ height: `${groupRowHeight}px` }}
+                                    style={{ height }}
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={(e) => {
                                         e.preventDefault();
@@ -108,9 +108,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: group.color || '#ef754e' }} />
                                         <span className="truncate text-xs font-bold text-[#292c31] dark:text-gray-100 font-['Manrope']">{group.name}</span>
                                     </div>
-                                    <span className="text-[10px] font-semibold text-gray-400 px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10">
-                                        {groupTasksCount}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        {item.span && (
+                                            <span className="text-[10px] font-semibold text-gray-400 tabular-nums" title="Group progress (weighted by task duration)">{item.span.completion}%</span>
+                                        )}
+                                        <span className="text-[10px] font-semibold text-gray-400 px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10">
+                                            {groupTasksCount}
+                                        </span>
+                                    </div>
                                 </div>
                             );
                         }
@@ -123,7 +128,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                     key={`assignment-${assignment.id}`}
                                     onClick={() => onEditTask(assignment.taskId)}
                                     className="flex items-center group cursor-pointer border-b border-[#f0f0ec] dark:border-gray-800 hover:bg-[#fafaf8] dark:hover:bg-gray-800/50 transition-colors"
-                                    style={{ height: `${assignmentRowHeight}px`, paddingLeft: '3.5rem' }}
+                                    style={{ height, paddingLeft: '3.5rem' }}
                                 >
                                     {assignment.completed ? <CheckCircleIconSolid className="w-3.5 h-3.5 text-emerald-500 mr-3 flex-shrink-0" /> : <CheckCircleIcon className="w-3.5 h-3.5 text-gray-300 mr-3 flex-shrink-0" />}
                                     <div className="flex-1 w-0 truncate text-xs text-gray-600 dark:text-gray-400 font-medium">{assignment.name}</div>
@@ -163,7 +168,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                             ? 'bg-[#fdf5f2] dark:bg-[#2d221f] border-l-4 border-l-[#ef754e]' 
                                             : 'hover:bg-[#fafaf8] dark:hover:bg-gray-800/30'
                                 }`}
-                                style={{ height: `${rowHeight}px`}}
+                                style={{ height }}
                             >
                                 <div className={`w-1 h-full transition-colors ${isSelected ? 'bg-[#ef754e]' : isCompleted ? 'bg-emerald-400' : 'bg-transparent'}`}></div>
                                 <div className="flex items-center w-full" style={{ paddingLeft: task.groupId ? '1.5rem' : '0.5rem' }}>
@@ -220,6 +225,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                     })}
                 </div>
             </div>
+            <div className="flex-shrink-0 flex items-stretch p-2 border-t border-[#e6e6e2] dark:border-gray-800" style={{ height: FOOTER_HEIGHT }}>
              <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -232,13 +238,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                 }}
                 onDragEnter={(e) => { e.preventDefault(); onSetDragOverGroupId('ungrouped'); }}
                 onDragLeave={(e) => { e.preventDefault(); onSetDragOverGroupId(null); }}
-                className={`m-3 mt-auto p-2.5 text-center border border-dashed rounded-xl transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center border border-dashed rounded-xl transition-all duration-200 ${
                     dragOverGroupId === 'ungrouped'
                         ? 'bg-[#fdf2ee] border-[#ef754e] dark:bg-[#2d221f]'
                         : 'border-[#e6e6e2] dark:border-gray-800 bg-[#fafaf8]/50 dark:bg-gray-800/30'
                 }`}
             >
                 <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 pointer-events-none">Drop here to ungroup task</span>
+            </div>
             </div>
         </div>
     );

@@ -2,7 +2,11 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Run and deploy your AI Studio app
+# Benchline
+
+Benchline (formerly *Sai* / *Project Guru*) is a research project planner: a Gantt roadmap with dependencies, Kanban board, list, calendar with Google/Outlook sync, meetings, notes, experiments and an AI assistant.
+
+## Run and deploy your AI Studio app
 
 This contains everything you need to run your app locally.
 

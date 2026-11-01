@@ -215,7 +215,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onNewProject, onLoadProject
                                 <div className="absolute left-[24%] top-[64%] h-1.5 w-5 rounded-full bg-white/80" />
                             </div>
                             <div>
-                                <div className="text-2xl font-black tracking-tight">Sai</div>
+                                <div className="text-2xl font-black tracking-tight">Benchline</div>
                                 <div className="text-sm font-medium text-gray-500">Project workspace</div>
                             </div>
                         </div>
