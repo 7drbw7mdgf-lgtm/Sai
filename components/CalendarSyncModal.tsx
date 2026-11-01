@@ -83,9 +83,9 @@ export const CalendarSyncModal: React.FC<CalendarSyncModalProps> = ({
 
     const handleDownloadICS = () => {
         const icsContent = generateICS(projectData, config.syncScope);
-        downloadICSFile('sai-workspace-calendar', icsContent);
+        downloadICSFile('benchline-workspace-calendar', icsContent);
         setSyncMessageType('success');
-        setSyncMessage('Downloaded sai-workspace-calendar.ics successfully.');
+        setSyncMessage('Downloaded benchline-workspace-calendar.ics successfully.');
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -786,9 +786,9 @@ export const CalendarSyncModal: React.FC<CalendarSyncModalProps> = ({
                                 </h4>
                                 <div className="space-y-2 text-xs">
                                     {[
-                                        { id: 'two-way', title: 'Two-Way Sync (Recommended)', desc: 'Export Sai items and import external Google / Outlook items' },
-                                        { id: 'export-only', title: 'Export Only', desc: 'Publish Sai events to Google & Outlook without importing external events' },
-                                        { id: 'import-only', title: 'Import Only', desc: 'Read Google & Outlook calendars into Sai without modifying external accounts' },
+                                        { id: 'two-way', title: 'Two-Way Sync (Recommended)', desc: 'Export Benchline items and import external Google / Outlook items' },
+                                        { id: 'export-only', title: 'Export Only', desc: 'Publish Benchline events to Google & Outlook without importing external events' },
+                                        { id: 'import-only', title: 'Import Only', desc: 'Read Google & Outlook calendars into Benchline without modifying external accounts' },
                                     ].map((dir) => (
                                         <label key={dir.id} className="flex items-start gap-2.5 cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                             <input

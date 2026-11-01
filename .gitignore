@@ -27,6 +27,6 @@ src-tauri/gen
 *.sln
 *.sw?
 
-# Sai Runtime & User Feedback
+# Benchline Runtime & User Feedback
 feedback/
 calendar.ics

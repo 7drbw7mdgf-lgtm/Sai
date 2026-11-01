@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Sai",
+  "productName": "Benchline",
   "version": "1.0.0",
   "identifier": "com.sai.app",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Sai",
+        "title": "Benchline",
         "width": 1280,
         "height": 800,
         "minWidth": 900,

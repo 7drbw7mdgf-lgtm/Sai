@@ -70,7 +70,7 @@ const ColorSettingRow: React.FC<{label: string, color: string, onChange: (c: str
 
 const HelpContent: React.FC = () => (
     <div className="prose prose-sm dark:prose-invert max-w-none animate-fade-in max-h-[450px] overflow-y-auto pr-4">
-        <h2>Welcome to Sai!</h2>
+        <h2>Welcome to Benchline!</h2>
         <p>This guide will walk you through the key features of the application.</p>
         
         <h4>Navigation</h4>
@@ -495,7 +495,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentS
                         ))}
                     </nav>
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700 text-[10px] text-center text-gray-400 uppercase tracking-widest font-semibold">
-                        Sai v1.3.0
+                        Benchline v1.3.0
                     </div>
                 </aside>
                 

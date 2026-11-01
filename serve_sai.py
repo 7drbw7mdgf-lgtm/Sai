@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Sai Local Host Web Server
-Serves the extracted Sai Application directly from the DMG on localhost (127.0.0.1).
+Benchline Local Host Web Server
+Serves the extracted Benchline Application directly from the DMG on localhost (127.0.0.1).
 Supports interactive screen markup, visual feedback, and bug annotations via /api/feedback.
 """
 import sys
@@ -23,7 +23,7 @@ CALENDAR_FILE = ROOT_DIR / "calendar.ics"
 DEFAULT_PORT = 3000
 PORT = int(os.environ.get("SAI_PORT", sys.argv[1] if len(sys.argv) > 1 and sys.argv[1].isdigit() else DEFAULT_PORT))
 
-APP_NAME = "Sai"
+APP_NAME = "Benchline"
 APP_VERSION = "1.0.0"
 
 class SaiHandler(SimpleHTTPRequestHandler):
@@ -87,7 +87,7 @@ class SaiHandler(SimpleHTTPRequestHandler):
         if clean_path in ("/api/calendar/feed.ics", "/calendar.ics"):
             self.send_response(200)
             self.send_header("Content-Type", "text/calendar; charset=utf-8")
-            self.send_header("Content-Disposition", 'inline; filename="sai-calendar.ics"')
+            self.send_header("Content-Disposition", 'inline; filename="benchline-calendar.ics"')
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.end_headers()
             if CALENDAR_FILE.exists():
@@ -96,10 +96,10 @@ class SaiHandler(SimpleHTTPRequestHandler):
                 default_ics = (
                     "BEGIN:VCALENDAR\r\n"
                     "VERSION:2.0\r\n"
-                    "PRODID:-//Sai//Project Management//EN\r\n"
+                    "PRODID:-//Benchline//Project Management//EN\r\n"
                     "CALSCALE:GREGORIAN\r\n"
                     "METHOD:PUBLISH\r\n"
-                    "X-WR-CALNAME:Sai Workspace Calendar\r\n"
+                    "X-WR-CALNAME:Benchline Workspace Calendar\r\n"
                     "X-WR-TIMEZONE:UTC\r\n"
                     "END:VCALENDAR\r\n"
                 )
@@ -174,7 +174,7 @@ class SaiHandler(SimpleHTTPRequestHandler):
             if css_file.exists():
                 self.wfile.write(css_file.read_bytes())
             else:
-                self.wfile.write(b"/* Sai CSS */\n")
+                self.wfile.write(b"/* Benchline CSS */\n")
             return
 
         # Static file check within DIST_DIR
@@ -261,7 +261,7 @@ class SaiHandler(SimpleHTTPRequestHandler):
                 items_count = payload.get("itemsCount", 0)
                 if ics_data:
                     CALENDAR_FILE.write_text(ics_data, encoding="utf-8")
-                    print(f"📅 Synced Sai calendar feed: {items_count} items ({len(ics_data)} bytes)")
+                    print(f"📅 Synced Benchline calendar feed: {items_count} items ({len(ics_data)} bytes)")
                     sys.stdout.flush()
 
                 self.send_response(200)
@@ -340,7 +340,7 @@ def main():
     PORT = find_available_port(PORT)
     server_address = ("127.0.0.1", PORT)
     server = ThreadingHTTPServer(server_address, SaiHandler)
-    print(f"✨ Sai Local Host running at: http://127.0.0.1:{PORT}")
+    print(f"✨ Benchline Local Host running at: http://127.0.0.1:{PORT}")
     print(f"✨ Browser URL: http://localhost:{PORT}")
     print(f"✨ Health Check: http://127.0.0.1:{PORT}/api/health")
     print(f"✨ Feedback Directory: {FEEDBACK_DIR}")

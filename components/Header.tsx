@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({
                  <div className="flex min-w-0 items-center gap-3">
                     <div className="flex items-center gap-2 cursor-pointer select-none">
                         <SparkIcon className="w-5 h-5 text-[#ef754e]" />
-                        <span className="text-xl font-extrabold tracking-tight text-[#292c31] dark:text-gray-100 font-['Manrope']">sai<span className="text-[#ef754e]">.</span></span>
+                        <span className="text-xl font-extrabold tracking-tight text-[#292c31] dark:text-gray-100 font-['Manrope']">benchline<span className="text-[#ef754e]">.</span></span>
                     </div>
 
                     <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-[#f4f5f0] dark:bg-gray-800 border border-[#e6e6e2] dark:border-gray-700 rounded-full text-[10.5px] font-bold text-[#626e56] dark:text-[#a3b397] tracking-wider uppercase">

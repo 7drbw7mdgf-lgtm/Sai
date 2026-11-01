@@ -1,5 +1,5 @@
 /**
- * Sai Calendar Sync Service for Google Calendar & Microsoft Outlook
+ * Benchline Calendar Sync Service for Google Calendar & Microsoft Outlook
  * Supports RFC 5545 iCalendar (.ics) generation, feed syndication, live URL sync,
  * and direct 1-click web compose links for Google Calendar and Outlook Web/Desktop.
  */
@@ -30,6 +30,8 @@ export interface CalendarSyncConfig {
     itemsSyncedCount: number;
 }
 
+// Storage key and event UIDs (@sai.workspace) keep the pre-rename prefix so existing
+// sync settings and already-synced calendar events keep working.
 const STORAGE_KEY = 'sai-calendar-sync-config';
 
 export const DEFAULT_SYNC_CONFIG: CalendarSyncConfig = {
@@ -115,11 +117,11 @@ export function generateICS(
     const lines: string[] = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//Sai//Project Management Calendar Sync//EN',
+        'PRODID:-//Benchline//Project Management Calendar Sync//EN',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
-        'X-WR-CALNAME:Sai Workspace Calendar',
-        'X-WR-CALDESC:Tasks, Milestones & Meetings from Sai',
+        'X-WR-CALNAME:Benchline Workspace Calendar',
+        'X-WR-CALDESC:Tasks, Milestones & Meetings from Benchline',
         'X-WR-TIMEZONE:UTC',
     ];
 
@@ -138,7 +140,7 @@ export function generateICS(
             const desc = [
                 m.agenda ? `Agenda: ${m.agenda}` : '',
                 attendeeNames ? `Attendees: ${attendeeNames}` : '',
-                'Managed via Sai Dashboard',
+                'Managed via Benchline Dashboard',
             ]
                 .filter(Boolean)
                 .join('\n');
@@ -223,7 +225,7 @@ export function generateICS(
 }
 
 /**
- * Parses RFC 5545 iCalendar text into Sai Meetings & Tasks
+ * Parses RFC 5545 iCalendar text into Benchline Meetings & Tasks
  */
 export function parseICS(
     icsText: string,

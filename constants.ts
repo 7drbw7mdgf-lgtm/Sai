@@ -125,7 +125,7 @@ export const DUMMY_TASKS: Task[] = [
         notes: "### Design Requirements\n- Mobile-first approach\n- Adhere to the new style guide\n- Get feedback from stakeholders by EOD Friday.",
         dependencies: [],
         tags: ['UI', 'Design System'],
-        customFieldValues: { cf1: 8, cf2: 'Project Guru Inc.', cf3: 'NA' }
+        customFieldValues: { cf1: 8, cf2: 'Benchline Labs', cf3: 'NA' }
     },
     {
         id: 't2', name: 'Style Guide', groupId: 'g1', startDate: day(8),
@@ -190,7 +190,7 @@ export const DUMMY_NOTES: Note[] = [
     {
         id: 'note-1',
         title: 'Project Goals',
-        content: '# Project Guru Goals\n\nOur main goal is to build the best project management tool ever.\n\n- Intuitive UI\n- Powerful features\n- Blazingly fast\n\nSee [[Meeting Notes 2024-07-29]] for more details.',
+        content: '# Benchline Goals\n\nOur main goal is to build the best project management tool ever.\n\n- Intuitive UI\n- Powerful features\n- Blazingly fast\n\nSee [[Meeting Notes 2024-07-29]] for more details.',
         tags: ['strategy', 'planning'],
         parentId: null,
         createdAt: new Date('2024-07-28T10:00:00Z'),

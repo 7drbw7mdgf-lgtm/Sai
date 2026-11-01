@@ -63,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({
         <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 px-6 flex items-center justify-between h-16 flex-shrink-0 z-30">
             <div className="flex items-center gap-4" style={{width: '280px'}}>
                  <div className="flex items-center gap-3">
-                    <span className="text-xl font-bold text-gray-800 dark:text-gray-100 whitespace-nowrap">Project Guru</span>
+                    <span className="text-xl font-bold text-gray-800 dark:text-gray-100 whitespace-nowrap">Benchline</span>
                  </div>
                  {/* FIX: Replaced old FileMenu implementation with DropdownMenu component */}
                  <DropdownMenu trigger={
