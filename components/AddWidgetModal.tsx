@@ -10,6 +10,8 @@ import { TimelineIcon } from './icons/TimelineIcon';
 import { PeopleManagementIcon } from './icons/PeopleManagementIcon';
 import { LinkIcon } from './icons/LinkIcon';
 import { DocumentTextIcon } from './icons/DocumentTextIcon';
+import { FlagIcon } from './icons/FlagIcon';
+import { LightningIcon } from './icons/LightningIcon';
 
 interface AddWidgetModalProps {
     isOpen: boolean;
@@ -26,13 +28,16 @@ const ALL_WIDGETS = [
     { type: WidgetType.Welcome, name: 'Welcome Banner', description: "A simple welcome message.", icon: <HomeIcon className="w-6 h-6"/> },
     { type: WidgetType.ProjectTimeline, name: 'Project Timeline', description: "High-level project progress.", icon: <TimelineIcon className="w-6 h-6"/> },
     { type: WidgetType.Team, name: 'Team Members', description: "See all project members.", icon: <PeopleManagementIcon className="w-6 h-6"/> },
-    { type: WidgetType.PeopleHub, name: 'Team Hub', description: "An overview of your team members.", icon: <PeopleManagementIcon className="w-6 h-6"/> },
-    { type: WidgetType.NotesOverview, name: 'Recent Notes', description: "A list of recently updated notes.", icon: <DocumentTextIcon className="w-6 h-6"/> },
     { type: WidgetType.QuickLinks, name: 'Quick Links', description: "A list of important links.", icon: <LinkIcon className="w-6 h-6"/> },
+    { type: WidgetType.PriorityBreakdown, name: 'Priority Mix', description: "See active tasks grouped by priority.", icon: <FlagIcon className="w-6 h-6"/> },
+    { type: WidgetType.Workload, name: 'Workload', description: "Compare active task load across the team.", icon: <PeopleManagementIcon className="w-6 h-6"/> },
+    { type: WidgetType.RecentActivity, name: 'Recent Activity', description: "A compact feed of nearby tasks and meetings.", icon: <LightningIcon className="w-6 h-6"/> },
+    { type: WidgetType.TodaySchedule, name: "Today's Schedule", description: "Timed meetings and task blocks for today.", icon: <CalendarDaysIcon className="w-6 h-6"/> },
 ];
 
-const AddWidgetModal: React.FC<AddWidgetModalProps> = ({ isOpen, onClose, onAddWidget, existingWidgets }) => {
-    const availableWidgets = ALL_WIDGETS.filter(w => !existingWidgets.includes(w.type));
+const AddWidgetModal: React.FC<AddWidgetModalProps> = ({ isOpen, onClose, onAddWidget, existingWidgets = [] }) => {
+    const list = Array.isArray(existingWidgets) ? existingWidgets : [];
+    const availableWidgets = ALL_WIDGETS.filter(w => !list.includes(w.type));
     
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Add a Widget" maxWidth="max-w-2xl">

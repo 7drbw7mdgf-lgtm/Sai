@@ -76,6 +76,17 @@ const DependencyLines: React.FC<DependencyLinesProps> = ({ dependencies, onRemov
                 >
                     <path d="M 0 0 L 10 5 L 0 10 z" fill="#9ca3af" />
                 </marker>
+                <marker
+                    id="arrow-head-hover"
+                    viewBox="0 0 10 10"
+                    refX="9"
+                    refY="5"
+                    markerWidth="6"
+                    markerHeight="6"
+                    orient="auto"
+                >
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef754e" />
+                </marker>
             </defs>
             {dependencies.map((dep, index) => {
                 const pathData = getPathData(dep.start, dep.end);
@@ -90,10 +101,10 @@ const DependencyLines: React.FC<DependencyLinesProps> = ({ dependencies, onRemov
                         <path
                             d={pathData}
                             stroke="#9ca3af"
-                            strokeWidth="1.5"
+                            strokeWidth="1.75"
                             fill="none"
                             markerEnd="url(#arrow-head)"
-                            className="group-hover:stroke-blue-500 transition-colors"
+                            className="group-hover:stroke-[#ef754e] transition-colors"
                         />
                         
                         {onRemoveDependency && (

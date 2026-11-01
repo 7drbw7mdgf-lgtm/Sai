@@ -2,124 +2,213 @@
 import React, { useState } from 'react';
 import { View } from '../types';
 import Tooltip from './Tooltip';
-import { HomeIcon } from './icons/HomeIcon';
-import { GanttChartIcon } from './icons/GanttChartIcon';
-import { TasksIcon } from './icons/TasksIcon';
-import { CalendarDaysIcon } from './icons/CalendarDaysIcon';
-import { DocumentTextIcon } from './icons/DocumentTextIcon';
-import { TaskPlusIcon } from './icons/TaskPlusIcon';
-import { DocumentPlusIcon } from './icons/DocumentPlusIcon';
-import { PeopleManagementIcon } from './icons/PeopleManagementIcon';
-import { SettingsIcon } from './icons/SettingsIcon';
-import { UndoIcon } from './icons/UndoIcon';
-import { RedoIcon } from './icons/RedoIcon';
-import { QuestionMarkCircleIcon } from './icons/QuestionMarkCircleIcon';
-import { SparklesIcon } from './icons/SparklesIcon';
 
 interface SideNavbarProps {
     currentView: View;
     onViewChange: (view: View) => void;
     onSettings: () => void;
     onAddTask: () => void;
-    onAddNote: () => void;
-    onTogglePeopleHub: () => void;
-    onToggleAIAssistant: () => void;
-    undo: () => void;
-    redo: () => void;
-    canUndo: boolean;
-    canRedo: boolean;
+    onAddNote?: () => void;
+    onTogglePeopleHub?: () => void;
+    onToggleAIAssistant?: () => void;
     onOpenShortcutHelp: () => void;
 }
 
-const NavButton: React.FC<{ tooltip: string; isActive: boolean; onClick: () => void; children: React.ReactNode }> = ({ tooltip, isActive, onClick, children }) => (
+const IconBase: React.FC<React.SVGProps<SVGSVGElement>> = ({ children, ...props }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.9}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...props}
+    >
+        {children}
+    </svg>
+);
+
+const NavHomeIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <path d="M3.5 11.2 12 4l8.5 7.2" />
+        <path d="M5.5 10.5v8.25a1.25 1.25 0 0 0 1.25 1.25h10.5a1.25 1.25 0 0 0 1.25-1.25V10.5" />
+        <path d="M9.5 20v-5.2h5V20" />
+    </IconBase>
+);
+
+const NavTimelineIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <path d="M4 7h16" />
+        <path d="M4 12h16" />
+        <path d="M4 17h16" />
+        <path d="M7 5v4" />
+        <path d="M13 10v4" />
+        <path d="M17 15v4" />
+    </IconBase>
+);
+
+const NavTasksIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <rect x="5" y="4" width="14" height="16" rx="3" />
+        <path d="m8.25 9 1.25 1.25L12 7.75" />
+        <path d="M14 9.25h2" />
+        <path d="m8.25 14 1.25 1.25L12 12.75" />
+        <path d="M14 14.25h2" />
+    </IconBase>
+);
+
+const NavCalendarIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <rect x="4" y="5.5" width="16" height="14.5" rx="3" />
+        <path d="M8 3.5v4" />
+        <path d="M16 3.5v4" />
+        <path d="M4 10h16" />
+        <path d="M8 14h.01" />
+        <path d="M12 14h.01" />
+        <path d="M16 14h.01" />
+    </IconBase>
+);
+
+const NavNotesIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <path d="M7 4.5h7.5L19 9v10.5H7a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2Z" />
+        <path d="M14.5 4.5V9H19" />
+        <path d="M8.5 13h7" />
+        <path d="M8.5 16h5" />
+    </IconBase>
+);
+
+const NavKanbanIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <rect x="3.5" y="4.5" width="5" height="15" rx="1.5" />
+        <rect x="10.5" y="4.5" width="5" height="10" rx="1.5" />
+        <rect x="17.5" y="4.5" width="5" height="7" rx="1.5" />
+    </IconBase>
+);
+
+const NavSparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <path d="M12 3.75 13.7 8.3 18.25 10 13.7 11.7 12 16.25 10.3 11.7 5.75 10l4.55-1.7L12 3.75Z" />
+        <path d="m5.5 15 .8 2.15L8.5 18l-2.2.85L5.5 21l-.8-2.15L2.5 18l2.2-.85L5.5 15Z" />
+        <path d="m18 14 .65 1.7 1.85.7-1.85.7L18 18.8l-.65-1.7-1.85-.7 1.85-.7L18 14Z" />
+    </IconBase>
+);
+
+const NavAddTaskIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <rect x="5" y="5" width="14" height="14" rx="3" />
+        <path d="M12 8.5v7" />
+        <path d="M8.5 12h7" />
+    </IconBase>
+);
+
+const NavAddNoteIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <path d="M6.5 4.5h8L18 8v11.5H6.5a1.5 1.5 0 0 1-1.5-1.5v-12a1.5 1.5 0 0 1 1.5-1.5Z" />
+        <path d="M14.5 4.5V8H18" />
+        <path d="M11.5 11.5v5" />
+        <path d="M9 14h5" />
+    </IconBase>
+);
+
+const NavTeamIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <circle cx="9" cy="8.5" r="2.5" />
+        <circle cx="16.5" cy="9.5" r="2" />
+        <path d="M4.5 18.5a4.5 4.5 0 0 1 9 0" />
+        <path d="M13.5 17.5a3.5 3.5 0 0 1 6 1" />
+    </IconBase>
+);
+
+const NavHelpIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M9.75 9.75a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1.25.95-1.25 1.95" />
+        <path d="M12 17.25h.01" />
+    </IconBase>
+);
+
+const NavSettingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <IconBase {...props}>
+        <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
+        <path d="M19.4 13.5a7.8 7.8 0 0 0 .05-1.5l2-1.5-2-3.5-2.45 1a8.2 8.2 0 0 0-1.3-.75L15.35 4h-6.7L8.3 6.75c-.46.2-.9.45-1.3.75L4.55 6.5l-2 3.5 2 1.5a7.8 7.8 0 0 0 .05 1.5l-2.05 1.55 2 3.45 2.45-.95c.4.3.84.55 1.3.75l.35 2.7h6.7l.35-2.7c.46-.2.9-.45 1.3-.75l2.45.95 2-3.45-2.05-1.55Z" />
+    </IconBase>
+);
+
+const NavButton: React.FC<{ tooltip: string; isActive: boolean; onClick: () => void; children: React.ReactNode; showLabel?: boolean }> = ({ tooltip, isActive, onClick, children, showLabel = false }) => (
     <Tooltip text={tooltip}>
         <button
+            aria-label={tooltip}
+            title={tooltip}
             onClick={onClick}
-            className={`relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ease-in-out
-                ${isActive ? 'bg-[rgb(var(--color-primary-600))] text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-800 dark:hover:text-gray-200'}
+            className={`relative flex h-10 items-center rounded-xl transition-all duration-200 ease-in-out
+                ${showLabel ? 'w-[8.75rem] justify-start gap-3 px-3' : 'w-10 justify-center'}
+                ${isActive 
+                    ? 'bg-[#ef754e] text-white shadow-xs font-semibold' 
+                    : 'text-[#50564d] dark:text-gray-400 hover:bg-[#f0efeb] dark:hover:bg-gray-800/60 hover:text-[#292c31] dark:hover:text-gray-200 font-medium'}
             `}
         >
             {children}
+            {showLabel && <span className="truncate text-sm">{tooltip}</span>}
         </button>
     </Tooltip>
 );
 
 const SideNavbar: React.FC<SideNavbarProps> = ({
     currentView, onViewChange, onSettings, onAddTask, onAddNote, onTogglePeopleHub, onToggleAIAssistant,
-    undo, redo, canUndo, canRedo, onOpenShortcutHelp
+    onOpenShortcutHelp
 }) => {
 
     const mainViews = [
-        { id: View.GANTT, icon: <GanttChartIcon className="w-5 h-5" />, name: "Gantt" },
-        { id: View.TASKS, icon: <TasksIcon className="w-5 h-5" />, name: "Tasks" },
-        { id: View.CALENDAR, icon: <CalendarDaysIcon className="w-5 h-5" />, name: "Calendar" },
-        { id: View.NOTES, icon: <DocumentTextIcon className="w-5 h-5" />, name: "Notes" },
+        { id: View.KANBAN, icon: <NavKanbanIcon className="w-[20px] h-[20px]" />, name: "Kanban" },
+        { id: View.TASKS, icon: <NavTasksIcon className="w-[20px] h-[20px]" />, name: "List" },
+        { id: View.GANTT, icon: <NavTimelineIcon className="w-[20px] h-[20px]" />, name: "Gantt" },
+        { id: View.CALENDAR, icon: <NavCalendarIcon className="w-[20px] h-[20px]" />, name: "Calendar" },
     ];
 
     return (
-        <nav className="h-full w-[68px] flex flex-col items-center justify-between py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl flex-shrink-0 border-r border-gray-200/80 dark:border-gray-700/50 z-40">
+        <nav className="h-full w-40 flex flex-col justify-between px-3 py-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl flex-shrink-0 border-r border-[#e6e6e2] dark:border-gray-800 z-40">
             <div>
-                 <div className="mb-6 flex justify-center">
-                    <NavButton tooltip="Home" isActive={currentView === View.HOME} onClick={() => onViewChange(View.HOME)}>
-                        <HomeIcon className="w-5 h-5" />
+                 <div className="mb-6">
+                    <NavButton tooltip="Home" isActive={currentView === View.HOME} onClick={() => onViewChange(View.HOME)} showLabel>
+                        <NavHomeIcon className="w-[20px] h-[20px]" />
                     </NavButton>
                 </div>
-                <div className="space-y-3 flex flex-col items-center">
+                <div className="space-y-1.5 flex flex-col">
                     {mainViews.map(view => (
-                        <NavButton key={view.id} tooltip={view.name} isActive={currentView === view.id} onClick={() => onViewChange(view.id)}>
+                        <NavButton key={view.id} tooltip={view.name} isActive={currentView === view.id} onClick={() => onViewChange(view.id)} showLabel>
                             {view.icon}
                         </NavButton>
                     ))}
                 </div>
             </div>
 
-            <div className="space-y-3 flex flex-col items-center">
-                {/* NotebookLM Style AI Assistant */}
-                <Tooltip text="AI Assistant">
-                    <button onClick={onToggleAIAssistant} className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white hover:shadow-lg hover:scale-105 transition-all">
-                        <SparklesIcon className="w-5 h-5" />
-                    </button>
-                </Tooltip>
-
-                <div className="w-6 h-px bg-gray-200 dark:bg-gray-700 mx-auto my-2"></div>
-
+            <div className="space-y-2 flex flex-col">
                 <Tooltip text="Add Task (N)">
-                    <button onClick={onAddTask} className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 dark:text-gray-400 transition-colors">
-                        <TaskPlusIcon className="w-5 h-5" />
-                    </button>
-                </Tooltip>
-                 <Tooltip text="Add Note">
-                    <button onClick={onAddNote} className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 dark:text-gray-400 transition-colors">
-                        <DocumentPlusIcon className="w-5 h-5" />
-                    </button>
-                </Tooltip>
-                 <Tooltip text="Manage Team">
-                    <button onClick={onTogglePeopleHub} className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 dark:text-gray-400 transition-colors">
-                        <PeopleManagementIcon className="w-5 h-5" />
+                    <button 
+                        aria-label="Add Task" 
+                        title="Add Task" 
+                        onClick={onAddTask} 
+                        className="flex h-10 w-[8.75rem] items-center justify-start gap-3 rounded-xl px-3 bg-[#fdf2ee] hover:bg-[#fbe4db] text-[#ef754e] transition-all font-semibold active:scale-98"
+                    >
+                        <NavAddTaskIcon className="w-[20px] h-[20px] text-[#ef754e]" />
+                        <span className="truncate text-sm font-bold">New Task</span>
                     </button>
                 </Tooltip>
                 
-                 <div className="w-6 h-px bg-gray-200 dark:bg-gray-700 mx-auto my-2"></div>
-                
-                 <Tooltip text="Undo (Ctrl+Z)">
-                    <button onClick={undo} disabled={!canUndo} className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 dark:text-gray-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
-                        <UndoIcon className="w-5 h-5" />
-                    </button>
-                </Tooltip>
-                 <Tooltip text="Redo (Ctrl+Y)">
-                    <button onClick={redo} disabled={!canRedo} className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 dark:text-gray-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
-                        <RedoIcon className="w-5 h-5" />
-                    </button>
-                </Tooltip>
+                <div className="mx-2 h-px bg-[#e6e6e2] dark:bg-gray-800 my-1"></div>
 
                  <Tooltip text="Help (?)">
-                    <button onClick={onOpenShortcutHelp} className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 dark:text-gray-400 transition-colors">
-                        <QuestionMarkCircleIcon className="w-5 h-5" />
+                    <button aria-label="Help" title="Help" onClick={onOpenShortcutHelp} className="flex h-10 w-[8.75rem] items-center justify-start gap-3 rounded-xl px-3 text-[#50564d] transition-colors hover:bg-[#f0efeb] dark:text-gray-400 dark:hover:bg-gray-800/50">
+                        <NavHelpIcon className="w-[20px] h-[20px]" />
+                        <span className="truncate text-sm font-medium">Help</span>
                     </button>
                 </Tooltip>
                  <Tooltip text="Settings">
-                    <button onClick={onSettings} className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 dark:text-gray-400 transition-colors">
-                        <SettingsIcon className="w-5 h-5" />
+                    <button aria-label="Settings" title="Settings" onClick={onSettings} className="flex h-10 w-[8.75rem] items-center justify-start gap-3 rounded-xl px-3 text-[#50564d] transition-colors hover:bg-[#f0efeb] dark:text-gray-400 dark:hover:bg-gray-800/50">
+                        <NavSettingsIcon className="w-[20px] h-[20px]" />
+                        <span className="truncate text-sm font-medium">Settings</span>
                     </button>
                 </Tooltip>
             </div>

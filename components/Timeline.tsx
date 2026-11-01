@@ -31,6 +31,7 @@ interface TimelineProps {
     onRequestEditTask: (taskId: string) => void;
     dependencyLink: { type: 'prerequisite' | 'postrequisite', fromTaskId: string } | null;
     onLinkTask: (toTaskId: string) => void;
+    onStartDependencyLink: (taskId: string, type: 'prerequisite' | 'postrequisite') => void;
     dependencies: Dependency[];
     onRemoveDependency: (sourceId: string, targetId: string) => void;
 }
@@ -38,12 +39,13 @@ interface TimelineProps {
 const Timeline: React.FC<TimelineProps> = ({
     projectData, displayItems, zoom, ganttViewMode, rowHeight, groupRowHeight, assignmentRowHeight,
     selectedTaskId, onSelectTask, onTaskUpdate, onRequestEditTask,
-    dependencyLink, onLinkTask, dependencies, onRemoveDependency
+    dependencyLink, onLinkTask, onStartDependencyLink, dependencies, onRemoveDependency
 }) => {
     const { projectStartDate, projectEndDate } = projectData;
 
     const totalDays = diffInDays(projectStartDate, projectEndDate) + 1;
     const timelineWidth = totalDays * zoom;
+    const headerHeight = ganttViewMode === 'day' ? 82 : ganttViewMode === 'week' ? 52 : 28;
 
     const renderHeaders = () => {
         const months: { [key: string]: number } = {};
@@ -63,37 +65,63 @@ const Timeline: React.FC<TimelineProps> = ({
         const todayOffset = diffInDays(projectStartDate, new Date());
 
         return (
-            <div className="sticky top-0 z-30 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur-md">
-                <div className="flex h-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
+                {/* Month row */}
+                <div className="flex h-7 border-b border-[#e6e6e2] dark:border-gray-800">
                     {Object.entries(months).map(([month, days]) => (
-                        <div key={month} style={{ width: days * zoom }} className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 py-1 truncate px-1">
+                        <div key={month} style={{ width: days * zoom }} className="flex-shrink-0 border-r border-[#e6e6e2] dark:border-gray-800 text-center text-xs font-bold text-[#292c31] dark:text-gray-200 py-1 truncate px-2 font-['Manrope'] tracking-tight">
                             {month}
                         </div>
                     ))}
                 </div>
+                {/* Week row */}
                 {ganttViewMode !== 'month' && (
-                    <div className="flex h-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex h-6 border-b border-[#e6e6e2] dark:border-gray-800 bg-[#fafaf8] dark:bg-gray-850">
                         {Object.entries(weeks).map(([week, days]) => (
-                            <div key={week} style={{ width: days * zoom }} className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 text-center text-xs text-gray-400 dark:text-gray-500 py-1 truncate px-1">
+                            <div key={week} style={{ width: days * zoom }} className="flex-shrink-0 border-r border-[#e6e6e2] dark:border-gray-800 text-center text-[10px] font-semibold text-[#7a8472] dark:text-gray-400 py-0.5 truncate px-1">
                                 {week}
                             </div>
                         ))}
                     </div>
                 )}
+                {/* Day row */}
                  {ganttViewMode === 'day' && (
-                    <div className="flex h-6 border-b border-gray-200 dark:border-gray-700">
-                        {Array.from({ length: totalDays }).map((_, i) => (
-                            <div key={i} style={{ width: zoom }} className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 text-center text-xs text-gray-400 dark:text-gray-500">
-                                <span className="pt-1 block">{addDays(projectStartDate, i).getDate()}</span>
-                            </div>
-                        ))}
+                    <div className="flex h-7 border-b border-[#e6e6e2] dark:border-gray-800 bg-[#fafaf8] dark:bg-gray-850">
+                        {Array.from({ length: totalDays }).map((_, i) => {
+                            const date = addDays(projectStartDate, i);
+                            const dayOfWeek = date.getDay();
+                            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                            const isToday = i === todayOffset;
+                            return (
+                                <div 
+                                    key={i} 
+                                    style={{ width: zoom }} 
+                                    className={`flex-shrink-0 border-r border-[#e6e6e2]/70 dark:border-gray-800 text-center text-[11px] font-medium flex items-center justify-center ${
+                                        isToday 
+                                            ? 'bg-[#fdf2ee] dark:bg-[#38221c]' 
+                                            : isWeekend 
+                                                ? 'text-gray-400 bg-black/[0.025] dark:bg-white/[0.02]' 
+                                                : 'text-[#292c31] dark:text-gray-300'
+                                    }`}
+                                >
+                                    {isToday ? (
+                                        <span className="w-5 h-5 rounded-full bg-[#ef754e] text-white font-bold text-[10px] flex items-center justify-center shadow-2xs select-none">
+                                            {date.getDate()}
+                                        </span>
+                                    ) : (
+                                        <span className="font-semibold select-none">{date.getDate()}</span>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                  )}
-                 {/* Today Indicator */}
+                 {/* Today Indicator Line */}
                 {todayOffset >= 0 && todayOffset < totalDays && (
-                    <div className="absolute top-0 h-screen w-px bg-blue-500 z-20 opacity-50 pointer-events-none" style={{ left: todayOffset * zoom }}>
-                        <div className="absolute -top-1 -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full shadow-sm"></div>
-                    </div>
+                    <div 
+                        className="absolute top-0 bottom-0 w-[2px] bg-[#ef754e]/85 z-25 pointer-events-none shadow-xs" 
+                        style={{ left: (todayOffset + 0.5) * zoom }}
+                    />
                 )}
             </div>
         );
@@ -118,6 +146,7 @@ const Timeline: React.FC<TimelineProps> = ({
                     onRequestEditTask={onRequestEditTask}
                     isLinking={!!dependencyLink}
                     onLinkTask={onLinkTask}
+                    onStartDependencyLink={onStartDependencyLink}
                 />
             );
         } else if (item.type === 'group') {
@@ -137,26 +166,44 @@ const Timeline: React.FC<TimelineProps> = ({
         return acc;
     }, 0);
 
+    const rowLineTops = displayItems.reduce((acc: number[], item) => {
+        const previousTop = acc.length > 0 ? acc[acc.length - 1] : headerHeight;
+        const itemHeight = item.type === 'task' ? rowHeight : item.type === 'group' ? groupRowHeight : assignmentRowHeight;
+        acc.push(previousTop + itemHeight);
+        return acc;
+    }, []);
+
     return (
-        <div className="relative" style={{ width: timelineWidth, height: totalHeight }}>
+        <div className="relative" style={{ width: timelineWidth, height: headerHeight + totalHeight }}>
             {renderHeaders()}
-            {/* Grid lines */}
+            {/* Grid lines & Weekend shading */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                 {Array.from({ length: totalDays }).map((_, i) => (
-                    <div key={i} className="absolute top-0 bottom-0 border-r border-gray-100 dark:border-gray-800" style={{ left: (i + 1) * zoom, zIndex: 0 }}></div>
-                ))}
-                {Array.from({ length: displayItems.length }).map((_, i) => (
-                    <div key={i} className="absolute left-0 right-0 border-b border-gray-100 dark:border-gray-800" style={{ top: (i + 1) * rowHeight, zIndex: 0 }}></div>
+                {Array.from({ length: totalDays }).map((_, i) => {
+                    const date = addDays(projectStartDate, i);
+                    const dayOfWeek = date.getDay();
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    return (
+                        <div 
+                            key={i} 
+                            className={`absolute top-0 bottom-0 border-r border-[#e6e6e2]/50 dark:border-gray-800/60 ${
+                                isWeekend ? 'bg-black/[0.015] dark:bg-white/[0.012]' : ''
+                            }`} 
+                            style={{ left: (i + 1) * zoom, width: zoom, zIndex: 0 }}
+                        />
+                    );
+                })}
+                {rowLineTops.map((top, i) => (
+                    <div key={i} className="absolute left-0 right-0 border-b border-[#f0f0ec] dark:border-gray-800/70" style={{ top, zIndex: 0 }}></div>
                 ))}
             </div>
             
             {/* Dependencies rendered behind tasks but above grid */}
-            <div className="absolute top-0 left-0 w-full h-full z-10">
+            <div className="absolute left-0 w-full z-10" style={{ top: headerHeight, height: totalHeight }}>
                 <DependencyLines dependencies={dependencies} onRemoveDependency={onRemoveDependency} />
             </div>
 
             {/* Tasks rendered on top */}
-            <div className="absolute top-0 left-0 w-full h-full z-20 pointer-events-none">
+            <div className="absolute left-0 w-full z-20 pointer-events-none" style={{ top: headerHeight, height: totalHeight }}>
                 {renderedItems}
             </div>
         </div>

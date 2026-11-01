@@ -22,6 +22,10 @@ import { PaintBrushIcon } from './icons/PaintBrushIcon';
 import ColorSwatchPicker from './ColorSwatchPicker';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
 import MarkdownRenderer from './MarkdownRenderer';
+import { GoogleCalendarIcon } from './icons/GoogleCalendarIcon';
+import { OutlookIcon } from './icons/OutlookIcon';
+import { SyncArrowsIcon } from './icons/SyncArrowsIcon';
+import { createGoogleCalendarUrl, createOutlookCalendarUrl } from '../services/calendarSync';
 
 interface TaskDetailPanelProps {
     taskId: string;
@@ -530,6 +534,44 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
                                     onTaskLinkClick={() => {}}
                                 />
                             )}
+                        </div>
+                    </div>
+                </PillAccordion>
+
+                <PillAccordion title={<><SyncArrowsIcon className="w-5 h-5 text-gray-500" /><span className="font-semibold">Calendar Sync & Export</span></>} defaultOpen>
+                    <div className="p-2 space-y-3">
+                        <div className="text-xs text-gray-500">
+                            Push this task timeline to your external calendar:
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <a
+                                href={createGoogleCalendarUrl({
+                                    title: task.name,
+                                    start: task.startDate,
+                                    end: task.endDate,
+                                    description: task.notes || `Sai Task (${task.completion}% complete)`,
+                                })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 text-xs font-semibold text-gray-700 transition-colors shadow-sm"
+                            >
+                                <GoogleCalendarIcon className="w-4 h-4 flex-shrink-0" />
+                                <span>Google Calendar</span>
+                            </a>
+                            <a
+                                href={createOutlookCalendarUrl({
+                                    title: task.name,
+                                    start: task.startDate,
+                                    end: task.endDate,
+                                    description: task.notes || `Sai Task (${task.completion}% complete)`,
+                                })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-gray-200 hover:border-sky-400 hover:bg-sky-50/50 text-xs font-semibold text-gray-700 transition-colors shadow-sm"
+                            >
+                                <OutlookIcon className="w-4 h-4 flex-shrink-0" />
+                                <span>Outlook</span>
+                            </a>
                         </div>
                     </div>
                 </PillAccordion>

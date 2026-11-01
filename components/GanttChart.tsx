@@ -23,6 +23,7 @@ interface GanttChartProps {
     onRequestAddTask: () => void;
     onRequestEditTask: (taskId: string) => void;
     dependencyLink: { type: 'prerequisite' | 'postrequisite', fromTaskId: string } | null;
+    onStartDependencyLink: (taskId: string, type: 'prerequisite' | 'postrequisite') => void;
     onLinkTask: (toTaskId: string) => void;
     onRemoveDependency: (sourceId: string, targetId: string) => void;
 }
@@ -30,7 +31,15 @@ interface GanttChartProps {
 const ROW_HEIGHT = 60;
 const GROUP_ROW_HEIGHT = 40;
 const ASSIGNMENT_ROW_HEIGHT = 40;
-const SIDEBAR_WIDTH = 400;
+const DEFAULT_SIDEBAR_WIDTH = 400;
+const MIN_SIDEBAR_WIDTH = 240;
+const MAX_SIDEBAR_WIDTH = 750;
+
+const SparkIcon = ({ className = "w-4 h-4 text-[#ef754e]" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2a1.25 1.25 0 0 1 1.25 1.25v5.474l3.87-3.87a1.25 1.25 0 1 1 1.768 1.768l-3.87 3.87h5.474a1.25 1.25 0 1 1 0 2.5h-5.474l3.87 3.87a1.25 1.25 0 1 1-1.768 1.768l-3.87-3.87v5.474a1.25 1.25 0 1 1-2.5 0v-5.474l-3.87 3.87a1.25 1.25 0 0 1-1.768-1.768l3.87-3.87H3.25a1.25 1.25 0 1 1 0-2.5h5.474l-3.87-3.87a1.25 1.25 0 0 1 1.768-1.768l3.87 3.87V3.25A1.25 1.25 0 0 1 12 2Z" />
+    </svg>
+);
 
 const topologicalSortTasks = (tasks: Task[]): Task[] => {
     const sorted: Task[] = [];
@@ -145,12 +154,71 @@ const sortGroupsByDependencies = (groups: Group[], tasks: Task[]): Group[] => {
 
 const GanttChart: React.FC<GanttChartProps> = ({
     projectData, onSetData, zoom: initialZoom, ganttViewMode, onGanttViewModeChange, onRequestAddTask, onRequestEditTask,
-    dependencyLink, onLinkTask, onRemoveDependency
+    dependencyLink, onStartDependencyLink, onLinkTask, onRemoveDependency
 }) => {
     const { projectStartDate, tasks, groups, people, assignments = [] } = projectData;
 
     const [currentZoom, setCurrentZoom] = useState(initialZoom);
-    const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH);
+    const [sidebarWidth, setSidebarWidth] = useState(() => {
+        try {
+            const saved = localStorage.getItem('sai-gantt-sidebar-width');
+            if (saved) {
+                const num = parseInt(saved, 10);
+                if (!isNaN(num) && num >= MIN_SIDEBAR_WIDTH && num <= MAX_SIDEBAR_WIDTH) {
+                    return num;
+                }
+            }
+        } catch {}
+        return DEFAULT_SIDEBAR_WIDTH;
+    });
+    const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+    const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
+
+    const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsResizingSidebar(true);
+        resizeRef.current = {
+            startX: e.clientX,
+            startWidth: sidebarWidth,
+        };
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            if (!resizeRef.current) return;
+            const deltaX = moveEvent.clientX - resizeRef.current.startX;
+            const newWidth = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, Math.round(resizeRef.current.startWidth + deltaX)));
+            setSidebarWidth(newWidth);
+        };
+
+        const handleMouseUp = () => {
+            setIsResizingSidebar(false);
+            setSidebarWidth((latest) => {
+                try {
+                    localStorage.setItem('sai-gantt-sidebar-width', String(latest));
+                } catch {}
+                return latest;
+            });
+            resizeRef.current = null;
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        };
+
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    }, [sidebarWidth]);
+
+    const handleResetSidebarWidth = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
+        try {
+            localStorage.setItem('sai-gantt-sidebar-width', String(DEFAULT_SIDEBAR_WIDTH));
+        } catch {}
+    }, []);
+
     const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
     const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
@@ -262,6 +330,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
         });
     }
 
+    const handleStartDependencyFromNode = (taskId: string, type: 'prerequisite' | 'postrequisite') => {
+        onStartDependencyLink(taskId, type);
+        setSelectedTaskId(null);
+        window.setTimeout(() => setSelectedTaskId(null), 0);
+    };
+
     const handleTaskUpdate = (taskId: string, updates: Partial<Task>) => {
         onSetData(prev => {
             if (!prev) return null;
@@ -337,8 +411,16 @@ const GanttChart: React.FC<GanttChartProps> = ({
         return deps;
     }, [displayItems, tasks, projectStartDate, currentZoom]);
 
+    const handleScrollToToday = () => {
+        if (timelineScrollRef.current) {
+            const todayOffset = diffInDays(projectStartDate, new Date());
+            const targetX = Math.max(0, todayOffset * currentZoom - 240);
+            timelineScrollRef.current.scrollTo({ left: targetX, behavior: 'smooth' });
+        }
+    };
+
     return (
-        <div className="flex h-full bg-white dark:bg-gray-900 relative overflow-hidden">
+        <div className="flex h-full bg-white dark:bg-gray-900 relative overflow-hidden font-sans">
             <TaskSidebar 
                 width={sidebarWidth}
                 projectData={projectData}
@@ -360,16 +442,87 @@ const GanttChart: React.FC<GanttChartProps> = ({
                 onAddGroup={() => setIsAddGroupModalOpen(true)}
                 onAddTask={onRequestAddTask}
             />
-            <div className="flex-1 flex flex-col min-w-0 relative">
-                 <div className="flex-shrink-0 flex items-center justify-between border-b border-l border-gray-200 dark:border-gray-700 px-4 h-[57px] bg-white dark:bg-gray-900">
-                    <h2 className="text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Timeline</h2>
-                    <ViewControls 
-                        viewMode={ganttViewMode} 
-                        onViewModeChange={onGanttViewModeChange} 
-                        zoom={currentZoom}
-                        onZoomChange={setCurrentZoom}
-                    />
+
+            {/* Adjustable Splitter Divider */}
+            <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Adjust project tasks section width"
+                title="Drag to resize Project Tasks (Double-click to reset)"
+                onMouseDown={handleResizeMouseDown}
+                onDoubleClick={handleResetSidebarWidth}
+                className={`relative group/resizer w-2 flex-shrink-0 cursor-col-resize z-30 transition-colors select-none ${
+                    isResizingSidebar 
+                        ? 'bg-[#ef754e]/20' 
+                        : 'hover:bg-[#ef754e]/10 bg-transparent'
+                }`}
+            >
+                {/* Vertical separator line */}
+                <div 
+                    className={`absolute top-0 bottom-0 left-1/2 -translate-x-1/2 transition-all ${
+                        isResizingSidebar 
+                            ? 'bg-[#ef754e] w-0.5' 
+                            : 'bg-[#e6e6e2] dark:bg-gray-800 w-px group-hover/resizer:bg-[#ef754e] group-hover/resizer:w-0.5'
+                    }`} 
+                />
+                
+                {/* Center Grip Pill Handle */}
+                <div 
+                    className={`absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-3.5 h-8 rounded-full bg-white dark:bg-gray-800 border shadow-xs flex items-center justify-center transition-all ${
+                        isResizingSidebar 
+                            ? 'border-[#ef754e] text-[#ef754e] scale-110 shadow-sm ring-2 ring-[#ef754e]/20' 
+                            : 'border-[#e6e6e2] dark:border-gray-700 text-gray-400 group-hover/resizer:border-[#ef754e] group-hover/resizer:text-[#ef754e]'
+                    }`}
+                >
+                    <svg className="w-2 h-2" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="8" cy="6" r="2.5" />
+                        <circle cx="16" cy="6" r="2.5" />
+                        <circle cx="8" cy="12" r="2.5" />
+                        <circle cx="16" cy="12" r="2.5" />
+                        <circle cx="8" cy="18" r="2.5" />
+                        <circle cx="16" cy="18" r="2.5" />
+                    </svg>
                 </div>
+            </div>
+
+            <div className="flex-1 flex flex-col min-w-0 relative">
+                 <div className="flex-shrink-0 flex items-center justify-between border-b border-[#e6e6e2] dark:border-gray-800 px-4 h-[60px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
+                    <div className="flex items-center gap-3">
+                        <SparkIcon className="w-4 h-4 text-[#ef754e]" />
+                        <h2 className="text-sm font-bold text-[#292c31] dark:text-gray-100 font-['Manrope']">Roadmap Timeline</h2>
+                        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#f4f5f0] dark:bg-gray-800 text-[11px] font-bold text-[#626e56] dark:text-[#a0ae95] border border-[#e6e6e2] dark:border-gray-700">
+                            <span>{tasks.filter(t => t.completion === 100).length} of {tasks.length} done</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                        <button
+                            onClick={handleScrollToToday}
+                            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-xl border border-[#e6e6e2] dark:border-gray-700 hover:bg-[#f0efeb] dark:hover:bg-gray-800 text-[#5c6652] dark:text-gray-300 transition-colors"
+                            title="Scroll to Today"
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#ef754e]"></span>
+                            <span>Today</span>
+                        </button>
+                        <ViewControls 
+                            viewMode={ganttViewMode} 
+                            onViewModeChange={onGanttViewModeChange} 
+                            zoom={currentZoom}
+                            onZoomChange={setCurrentZoom}
+                        />
+                        <button
+                            onClick={onRequestAddTask}
+                            className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-[#ef754e] hover:bg-[#d85f3b] text-white text-xs font-bold transition-all shadow-2xs active:scale-98"
+                        >
+                            <span>＋</span>
+                            <span className="hidden sm:inline">Add Task</span>
+                        </button>
+                    </div>
+                </div>
+                {dependencyLink && (
+                    <div className="absolute left-1/2 top-[68px] z-40 -translate-x-1/2 rounded-full border border-[#ef754e]/30 bg-[#fdf2ee] px-4 py-2 text-xs font-bold text-[#ef754e] shadow-lg">
+                        Click another task bar to create a dependency link
+                    </div>
+                )}
                 <div 
                     ref={timelineScrollRef}
                     onScroll={handleScroll}
@@ -389,6 +542,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                         onRequestEditTask={onRequestEditTask}
                         dependencyLink={dependencyLink}
                         onLinkTask={onLinkTask}
+                        onStartDependencyLink={handleStartDependencyFromNode}
                         dependencies={dependencies}
                         onRemoveDependency={onRemoveDependency}
                     />

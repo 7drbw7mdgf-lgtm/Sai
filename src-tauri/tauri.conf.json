@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Project Guru",
+  "productName": "Sai",
   "version": "1.0.0",
-  "identifier": "com.projectguru.app",
+  "identifier": "com.sai.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3000",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Project Guru",
+        "title": "Sai",
         "width": 1280,
         "height": 800,
         "minWidth": 900,

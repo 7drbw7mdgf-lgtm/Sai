@@ -10,6 +10,10 @@ import { DocumentTextIcon } from './icons/DocumentTextIcon';
 import { HomeIcon } from './icons/HomeIcon';
 import { AdjustmentsHorizontalIcon } from './icons/AdjustmentsHorizontalIcon';
 import { QuestionMarkCircleIcon } from './icons/QuestionMarkCircleIcon';
+import { GoogleCalendarIcon } from './icons/GoogleCalendarIcon';
+import { OutlookIcon } from './icons/OutlookIcon';
+import { SyncArrowsIcon } from './icons/SyncArrowsIcon';
+import { loadSyncConfig, saveSyncConfig, getGoogleSubscribeUrl, getOutlookSubscribeUrl } from '../services/calendarSync';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -22,7 +26,7 @@ interface SettingsModalProps {
 const TABS = {
     APPEARANCE: 'Appearance',
     TYPOGRAPHY: 'Typography',
-    NOTES: 'Notes',
+    CALENDAR_SYNC: 'Calendar Sync',
     HOME_SCREEN: 'Home Screen',
     PREFERENCES: 'Preferences',
     HELP: 'Help',
@@ -66,7 +70,7 @@ const ColorSettingRow: React.FC<{label: string, color: string, onChange: (c: str
 
 const HelpContent: React.FC = () => (
     <div className="prose prose-sm dark:prose-invert max-w-none animate-fade-in max-h-[450px] overflow-y-auto pr-4">
-        <h2>Welcome to Project Guru!</h2>
+        <h2>Welcome to Sai!</h2>
         <p>This guide will walk you through the key features of the application.</p>
         
         <h4>Navigation</h4>
@@ -135,10 +139,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentS
         setSettings(s => ({ ...s, darkMode: !s.darkMode }));
     }
 
+    const [syncConfig, setSyncConfig] = useState(loadSyncConfig);
+    const [feedCopied, setFeedCopied] = useState(false);
+
+    const handleUpdateSync = (updates: any) => {
+        const next = { ...syncConfig, ...updates };
+        setSyncConfig(next);
+        saveSyncConfig(next);
+    };
+
+    const feedUrl = `${window.location.origin}/api/calendar/feed.ics`;
+
     const tabs = [
         { id: TABS.APPEARANCE, label: 'Appearance', icon: <PaintBrushIcon className="w-5 h-5"/> },
         { id: TABS.TYPOGRAPHY, label: 'Typography', icon: <TextColorIcon className="w-5 h-5"/> },
-        { id: TABS.NOTES, label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5"/> },
+        { id: TABS.CALENDAR_SYNC, label: 'Calendar Sync', icon: <SyncArrowsIcon className="w-5 h-5"/> },
         { id: TABS.HOME_SCREEN, label: 'Home Screen', icon: <HomeIcon className="w-5 h-5"/> },
         { id: TABS.PREFERENCES, label: 'Preferences', icon: <AdjustmentsHorizontalIcon className="w-5 h-5"/> },
         { id: TABS.HELP, label: 'Help', icon: <QuestionMarkCircleIcon className="w-5 h-5"/> },
@@ -332,6 +347,107 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentS
             </SettingsSection>
         </div>
     );
+
+    const renderCalendarSyncSettings = () => (
+        <div className="animate-fade-in space-y-6">
+            <SettingsSection title="Connected Calendars">
+                <SettingsRow>
+                    <div className="flex items-center gap-3">
+                        <GoogleCalendarIcon className="w-6 h-6" />
+                        <div>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100 block">Google Calendar</span>
+                            <span className="text-xs text-gray-500 block">{syncConfig.googleAccountEmail || 'Connected'}</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <a
+                            href={getGoogleSubscribeUrl(feedUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400 hover:bg-blue-100 rounded-md transition-colors"
+                        >
+                            Subscribe
+                        </a>
+                        <input
+                            type="checkbox"
+                            checked={syncConfig.googleConnected}
+                            onChange={(e) => handleUpdateSync({ googleConnected: e.target.checked })}
+                            className="h-4 w-4 text-blue-600 rounded"
+                        />
+                    </div>
+                </SettingsRow>
+                <SettingsRow>
+                    <div className="flex items-center gap-3">
+                        <OutlookIcon className="w-6 h-6" />
+                        <div>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100 block">Microsoft Outlook</span>
+                            <span className="text-xs text-gray-500 block">{syncConfig.outlookAccountEmail || 'Connected'}</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <a
+                            href={getOutlookSubscribeUrl(feedUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1 text-xs font-semibold text-sky-600 bg-sky-50 dark:bg-sky-950/60 dark:text-sky-400 hover:bg-sky-100 rounded-md transition-colors"
+                        >
+                            Subscribe
+                        </a>
+                        <input
+                            type="checkbox"
+                            checked={syncConfig.outlookConnected}
+                            onChange={(e) => handleUpdateSync({ outlookConnected: e.target.checked })}
+                            className="h-4 w-4 text-sky-600 rounded"
+                        />
+                    </div>
+                </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection title="Live iCal Subscription Feed">
+                <SettingsRow>
+                    <div className="w-full space-y-2">
+                        <div className="text-xs text-gray-500">
+                            Use this URL in Google Calendar or Outlook via "Subscribe from web":
+                        </div>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                readOnly
+                                value={feedUrl}
+                                className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md px-3 py-1.5 text-xs font-mono text-gray-700 dark:text-gray-200"
+                            />
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(feedUrl);
+                                    setFeedCopied(true);
+                                    setTimeout(() => setFeedCopied(false), 2000);
+                                }}
+                                className="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50"
+                            >
+                                {feedCopied ? 'Copied!' : 'Copy'}
+                            </button>
+                        </div>
+                    </div>
+                </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection title="Sync Frequency">
+                <SettingsRow>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Auto-Sync Interval</span>
+                    <select
+                        value={syncConfig.syncInterval}
+                        onChange={(e) => handleUpdateSync({ syncInterval: e.target.value })}
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md px-3 py-1 text-sm text-gray-800 dark:text-gray-100"
+                    >
+                        <option value="15m">Every 15 minutes</option>
+                        <option value="1h">Every hour</option>
+                        <option value="daily">Daily</option>
+                        <option value="manual">Manual only</option>
+                    </select>
+                </SettingsRow>
+            </SettingsSection>
+        </div>
+    );
     
     const renderHomeScreenSettings = () => (
         <div className="animate-fade-in">
@@ -379,7 +495,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentS
                         ))}
                     </nav>
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700 text-[10px] text-center text-gray-400 uppercase tracking-widest font-semibold">
-                        Project Guru v1.3.0
+                        Sai v1.3.0
                     </div>
                 </aside>
                 
@@ -388,6 +504,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentS
                     <div className="flex-1 overflow-y-auto p-8">
                         {activeTab === TABS.APPEARANCE && renderAppearanceSettings()}
                         {activeTab === TABS.TYPOGRAPHY && renderTypographySettings()}
+                        {activeTab === TABS.CALENDAR_SYNC && renderCalendarSyncSettings()}
                         {activeTab === TABS.NOTES && renderNotesSettings()}
                         {activeTab === TABS.HOME_SCREEN && renderHomeScreenSettings()}
                         {activeTab === TABS.PREFERENCES && renderPreferencesSettings()}

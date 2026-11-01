@@ -26,3 +26,7 @@ src-tauri/gen
 *.njsproj
 *.sln
 *.sw?
+
+# Sai Runtime & User Feedback
+feedback/
+calendar.ics

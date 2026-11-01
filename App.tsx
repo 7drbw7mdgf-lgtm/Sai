@@ -16,6 +16,7 @@ import Header from './components/Header';
 import GanttChart from './components/GanttChart';
 import SplashScreen from './components/SplashScreen';
 import TasksView from './components/TasksView';
+import KanbanView from './components/KanbanView';
 import CalendarView from './components/CalendarView';
 import NotesView from './components/NotesView';
 import HomeScreen from './components/HomeScreen';
@@ -28,6 +29,7 @@ import ShortcutHelpModal from './components/ShortcutHelpModal';
 import TimeframeModal from './components/TimeframeModal';
 import SettingsModal from './components/SettingsModal';
 import PlaceholderView from './components/PlaceholderView';
+import { FeedbackModal } from './components/FeedbackModal';
 import ExperimentDetailPanel from './components/ExperimentDetailPanel';
 import AIAssistantPanel from './components/AIAssistantPanel';
 
@@ -39,8 +41,8 @@ const defaultHomeScreenLayout: WidgetLayout[] = [
     { i: 'upcoming-meetings', type: WidgetType.UpcomingMeetings, x: 4, y: 0, w: 4, h: 4 },
     { i: 'project-timeline', type: WidgetType.ProjectTimeline, x: 4, y: 4, w: 4, h: 4 },
 
-    // Right Column: Notes and Team
-    { i: 'notes-overview', type: WidgetType.NotesOverview, x: 8, y: 0, w: 4, h: 5 },
+    // Right Column: Priorities and Team
+    { i: 'priority-breakdown', type: WidgetType.PriorityBreakdown, x: 8, y: 0, w: 4, h: 5 },
     { i: 'team', type: WidgetType.Team, x: 8, y: 5, w: 4, h: 3 },
 ];
 
@@ -86,9 +88,61 @@ const initialSettings: AppSettings = {
     homeScreenLayout: defaultHomeScreenLayout,
 };
 
+const initialMeetings: Meeting[] = [
+    {
+        id: 'meeting-g-1',
+        title: 'Sprint Retrospective & Roadmap Planning',
+        date: new Date(2026, 10, 2),
+        startTime: '10:00',
+        endTime: '11:30',
+        attendees: ['p-1', 'p-2'],
+        color: '#4285F4',
+        agenda: 'Review sprint deliverables and align on Google Meet.',
+        source: 'google',
+        location: 'https://meet.google.com/sai-sync',
+    },
+    {
+        id: 'meeting-o-1',
+        title: 'Weekly Executive Briefing & Milestone Review',
+        date: new Date(2026, 10, 3),
+        startTime: '14:00',
+        endTime: '15:00',
+        attendees: ['p-1', 'p-3'],
+        color: '#0078D4',
+        agenda: 'Executive briefing on milestones and team velocity in Teams.',
+        source: 'outlook',
+        location: 'Microsoft Teams Call',
+    },
+    {
+        id: 'meeting-g-2',
+        title: 'UX Design Critique & Prototype Review',
+        date: new Date(2026, 10, 5),
+        startTime: '15:30',
+        endTime: '16:30',
+        attendees: ['p-2', 'p-4'],
+        color: '#34A853',
+        agenda: 'Review Sparkboard dot-grid design and calendar integration.',
+        source: 'google',
+        location: 'Design Studio & Google Meet',
+    },
+];
+
+const initialProjectData: ProjectData = {
+    tasks: DUMMY_TASKS,
+    groups: DUMMY_GROUPS,
+    people: DUMMY_PEOPLE,
+    projectStartDate: DUMMY_PROJECT_START_DATE,
+    projectEndDate: DUMMY_PROJECT_END_DATE,
+    customFields: DUMMY_CUSTOM_FIELDS,
+    notes: DUMMY_NOTES,
+    assignments: DUMMY_ASSIGNMENTS,
+    meetings: initialMeetings,
+    experiments: [],
+};
+
 const App: React.FC = () => {
-    const [appState, setAppState] = useState<AppState>(AppState.SPLASH);
-    const [projectData, setProjectData, undo, redo, canUndo, canRedo] = useHistory<ProjectData | null>(null);
+    const [appState, setAppState] = useState<AppState>(AppState.MAIN);
+    const [projectData, setProjectData, undo, redo, canUndo, canRedo] = useHistory<ProjectData | null>(initialProjectData);
     const [currentView, setCurrentView] = useState<View>(View.HOME);
     
     const [ganttViewMode, setGanttViewMode] = useState<'day' | 'week' | 'month'>('day');
@@ -97,7 +151,7 @@ const App: React.FC = () => {
 
     const [settings, setSettings] = useState<AppSettings>(() => {
         try {
-            const storedSettings = localStorage.getItem('project-guru-settings');
+            const storedSettings = localStorage.getItem('sai-settings');
             if (storedSettings) {
                 const parsed: AppSettings = JSON.parse(storedSettings);
                 if (!parsed.homeScreenLayout || parsed.homeScreenLayout.length === 0) {
@@ -118,7 +172,7 @@ const App: React.FC = () => {
     const handleSaveSettings = (newSettings: AppSettings) => {
         setSettings(newSettings);
         try {
-            localStorage.setItem('project-guru-settings', JSON.stringify(newSettings));
+            localStorage.setItem('sai-settings', JSON.stringify(newSettings));
         } catch (e) { console.error("Failed to save settings:", String(e)); }
     };
 
@@ -134,6 +188,8 @@ const App: React.FC = () => {
     const [isTimeframeModalOpen, setIsTimeframeModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+    const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+    const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
 
     const [dependencyLink, setDependencyLink] = useState<{ type: 'prerequisite' | 'postrequisite', fromTaskId: string } | null>(null);
 
@@ -258,14 +314,48 @@ const App: React.FC = () => {
     }, [settings.notesSettings]);
     
     const handleLoadDemo = () => {
+        const now = new Date();
+        const demoMeetings: Meeting[] = [
+            {
+                id: 'm1',
+                title: 'Sprint 4 Planning & Prioritization',
+                date: new Date(now.getTime() + 1000 * 60 * 60 * 3),
+                startTime: '14:00',
+                endTime: '15:00',
+                attendees: ['p1', 'p2', 'p3'],
+                color: '#3B82F6',
+                agenda: 'Review backlog, assign story points, confirm sprint deliverables.'
+            },
+            {
+                id: 'm2',
+                title: 'Cross-functional Design Sync',
+                date: new Date(now.getTime() + 1000 * 60 * 60 * 24),
+                startTime: '10:30',
+                endTime: '11:15',
+                attendees: ['p1', 'p2'],
+                color: '#10B981',
+                agenda: 'Design QA for new Asana dashboard & task drawer.'
+            },
+            {
+                id: 'm3',
+                title: 'Executive Stakeholder Review',
+                date: new Date(now.getTime() + 1000 * 60 * 60 * 48),
+                startTime: '16:00',
+                endTime: '17:00',
+                attendees: ['p1', 'p4'],
+                color: '#8B5CF6',
+                agenda: 'Present progress metrics, milestone delivery dates, and blockers.'
+            }
+        ];
+
         const data: ProjectData = {
             projectStartDate: DUMMY_PROJECT_START_DATE,
             projectEndDate: DUMMY_PROJECT_END_DATE,
             tasks: DUMMY_TASKS.map(t => ({...t, startDate: new Date(t.startDate), endDate: new Date(t.endDate)})),
             groups: DUMMY_GROUPS,
             people: DUMMY_PEOPLE,
-            meetings: [],
-            notes: DUMMY_NOTES,
+            meetings: demoMeetings,
+            notes: [],
             assignments: DUMMY_ASSIGNMENTS.map(a => ({...a, startDate: new Date(a.startDate), endDate: new Date(a.endDate)})),
             jobs: [],
             designLayout: DUMMY_DESIGN_LAYOUT,
@@ -378,38 +468,82 @@ const App: React.FC = () => {
                     onRequestEditTask={setEditingTaskId} 
                     layout={settings.homeScreenLayout} 
                     onLayoutChange={(newLayout) => handleSaveSettings({...settings, homeScreenLayout: newLayout})} 
-                    onTogglePeopleHub={() => setIsPeopleHubOpen(true)} 
                     onRequestAddTask={() => setIsAddTaskPanelOpen(true)}
                     onRequestAddMeeting={() => setIsAddMeetingPanelOpen(true)}
+                    onViewChange={setCurrentView}
+                    onSetProjectData={setProjectData}
                 />;
-            case View.GANTT: return <GanttChart projectData={projectData} onSetData={setProjectData} zoom={zoom} ganttViewMode={ganttViewMode} onGanttViewModeChange={setGanttViewMode} onRequestAddTask={() => { setIsAddTaskPanelOpen(true); }} onRequestEditTask={setEditingTaskId} dependencyLink={dependencyLink} onLinkTask={handleLinkTask} onRemoveDependency={handleRemoveDependency} />;
+            case View.KANBAN:
+                return <KanbanView
+                    projectData={projectData}
+                    onSetData={setProjectData}
+                    onRequestEditTask={setEditingTaskId}
+                    onRequestAddTask={() => setIsAddTaskPanelOpen(true)}
+                />;
+            case View.GANTT: return <GanttChart projectData={projectData} onSetData={setProjectData} zoom={zoom} ganttViewMode={ganttViewMode} onGanttViewModeChange={setGanttViewMode} onRequestAddTask={() => { setIsAddTaskPanelOpen(true); }} onRequestEditTask={setEditingTaskId} dependencyLink={dependencyLink} onStartDependencyLink={handleStartLinking} onLinkTask={handleLinkTask} onRemoveDependency={handleRemoveDependency} />;
             case View.TASKS: return <TasksView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} />;
             case View.CALENDAR: return <CalendarView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} onRequestEditMeeting={setEditingMeetingId} />;
-            case View.NOTES: return <NotesView projectData={projectData} onSetData={setProjectData} notesSettings={settings.notesSettings} onRequestEditTask={handleRequestEditTaskFromNote} />;
+            case View.NOTES: return <TasksView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} />;
             default: return <PlaceholderView title="Coming Soon" message={`The ${currentView} view is under construction.`} />;
         }
     };
     
+    const handleOpenFeedback = async () => {
+        const root = document.getElementById('root');
+        if (root) {
+            const btn = document.getElementById('feedback-trigger-btn');
+            if (btn) btn.style.display = 'none';
+
+            const html2canvas = (window as any).html2canvas;
+            if (html2canvas) {
+                try {
+                    const canvas = await html2canvas(root, { logging: false, useCORS: true });
+                    const dataUrl = canvas.toDataURL('image/png');
+                    setScreenshotUrl(dataUrl);
+                } catch (e) {
+                    console.error("Screenshot capture failed:", e);
+                }
+            }
+            if (btn) btn.style.display = '';
+        }
+        setIsFeedbackModalOpen(true);
+    };
+
     if (appState === AppState.SPLASH) return <SplashScreen onNewProject={() => setAppState(AppState.CALENDAR)} onLoadProject={handleLoadDemo} />;
     if (appState === AppState.CALENDAR) return <SplashScreen isCalendarView onDatesSelected={handleDatesSelected} />;
 
     return (
         <div className="h-screen w-screen flex font-sans bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100">
-            <SideNavbar currentView={currentView} onViewChange={setCurrentView} onSettings={() => setIsSettingsModalOpen(true)} onAddTask={() => setIsAddTaskPanelOpen(true)} onAddNote={() => { const newNote: Note = { id: `note-${Date.now()}`, title: 'Untitled Note', content: '', tags: [], parentId: null, createdAt: new Date(), updatedAt: new Date(), }; setProjectData(p => p ? { ...p, notes: [...p.notes, newNote] } : p); setCurrentView(View.NOTES); }} onTogglePeopleHub={() => setIsPeopleHubOpen(o => !o)} onToggleAIAssistant={() => setIsAIAssistantOpen(o => !o)} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} onOpenShortcutHelp={() => setIsShortcutHelpOpen(true)} />
+            <SideNavbar currentView={currentView} onViewChange={setCurrentView} onSettings={() => setIsSettingsModalOpen(true)} onAddTask={() => setIsAddTaskPanelOpen(true)} onOpenShortcutHelp={() => setIsShortcutHelpOpen(true)} />
             <div className="flex-1 flex flex-col min-w-0">
-                <Header currentView={currentView} onLoad={handleLoadDemo} onSave={() => {}} onTimeframe={() => setIsTimeframeModalOpen(true)} searchQuery={searchQuery} onSearchChange={setSearchQuery} isSearchPanelOpen={isSearchPanelOpen} onSearchFocusChange={setIsSearchFocused} searchResults={searchResults} onSearchResultSelect={handleSearchResultSelect} projectData={projectData} />
+                <Header currentView={currentView} onLoad={handleLoadDemo} onSave={() => {}} onTimeframe={() => setIsTimeframeModalOpen(true)} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} searchQuery={searchQuery} onSearchChange={setSearchQuery} isSearchPanelOpen={isSearchPanelOpen} onSearchFocusChange={setIsSearchFocused} searchResults={searchResults} onSearchResultSelect={handleSearchResultSelect} projectData={projectData} />
                 <main className="flex-1 relative overflow-hidden"> {renderView()} </main>
             </div>
             {(isAddTaskPanelOpen && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><AddTaskPanel onClose={() => setIsAddTaskPanelOpen(false)} onSave={handleAddTask} people={projectData.people} groups={projectData.groups} customFields={projectData.customFields || []} /></div>}
             {(editingTaskId && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><TaskDetailPanel taskId={editingTaskId} projectData={projectData} onSetData={setProjectData} onClose={() => setEditingTaskId(null)} onDelete={handleDeleteTask} onDeleteAssignment={handleDeleteAssignment} isOpen={!!editingTaskId} onStartLinking={(type) => handleStartLinking(editingTaskId, type)} onRemoveDependency={handleRemoveDependency} /></div>}
             {(isAddMeetingPanelOpen && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><AddMeetingModal onClose={() => setIsAddMeetingPanelOpen(false)} onSave={handleAddMeeting} people={projectData.people} /></div>}
             {(editingMeetingId && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><MeetingDetailPanel meetingId={editingMeetingId} projectData={projectData} onSetData={setProjectData} onClose={() => setEditingMeetingId(null)} onDelete={handleDeleteMeeting} onAddJob={handleAddJob} onUpdateJob={handleUpdateJob} onDeleteJob={handleDeleteJob} isOpen={!!editingMeetingId} /></div>}
-            {(isPeopleHubOpen && projectData) && <div className="absolute top-0 right-0 h-full w-[720px] z-50 shadow-2xl"><PeopleManagementHub projectData={projectData} onSetData={setProjectData} onClose={() => { setIsPeopleHubOpen(false); setInitialPersonIdForHub(null); }} initialSelectedPersonId={initialPersonIdForHub} /></div>}
-            {(isAIAssistantOpen && projectData) && <AIAssistantPanel isOpen={isAIAssistantOpen} onClose={() => setIsAIAssistantOpen(false)} projectData={projectData} onSetData={setProjectData} />}
             <ShortcutHelpModal isOpen={isShortcutHelpOpen} onClose={() => setIsShortcutHelpOpen(false)} />
             {projectData && <TimeframeModal isOpen={isTimeframeModalOpen} onClose={() => setIsTimeframeModalOpen(false)} currentStart={projectData.projectStartDate} currentEnd={projectData.projectEndDate} onSave={(start, end) => setProjectData({...projectData, projectStartDate: start, projectEndDate: end})} />}
             <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} onSave={handleSaveSettings} defaultLayout={defaultHomeScreenLayout} />
             {(editingExperimentId && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><ExperimentDetailPanel experimentId={editingExperimentId} projectData={projectData} onSetData={setProjectData} onClose={() => setEditingExperimentId(null)} onDelete={handleDeleteExperiment} onRemoveLink={handleRemoveExperimentLink} /></div>}
+            <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} screenshotUrl={screenshotUrl} />
+            
+            {/* Floating Feedback Button */}
+            <button
+                id="feedback-trigger-btn"
+                onClick={handleOpenFeedback}
+                className="fixed bottom-6 right-6 z-[45] bg-blue-650 hover:bg-blue-700 text-white rounded-full p-3.5 shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 border border-blue-500/20"
+                title="Send developer feedback"
+            >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 10.742l-2.084 2.083a1.5 1.5 0 102.122 2.122l2.084-2.083M18.364 5.636l-2.083 2.084m0 0L13.12 4.56M16.28 7.72L19.44 4.56M16.28 7.72a3 3 0 11-4.243-4.243m0 0L9.95 5.56" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                </svg>
+                <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 ease-out whitespace-nowrap text-sm font-semibold">
+                    Feedback
+                </span>
+            </button>
         </div>
     );
 };

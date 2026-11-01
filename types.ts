@@ -7,6 +7,7 @@ export enum AppState {
 
 export enum View {
     HOME = 'Home',
+    KANBAN = 'Kanban',
     GANTT = 'Gantt',
     TASKS = 'Tasks',
     CALENDAR = 'Calendar',
@@ -49,6 +50,8 @@ export interface Task {
     dependencies?: string[];
     tags?: string[];
     customFieldValues?: { [fieldId: string]: any };
+    source?: 'local' | 'google' | 'outlook';
+    externalId?: string;
 }
 
 export interface Assignment {
@@ -72,6 +75,9 @@ export interface Meeting {
     attendees: string[];
     color: string;
     agenda: string;
+    source?: 'local' | 'google' | 'outlook';
+    externalId?: string;
+    location?: string;
 }
 
 export interface Job {
@@ -201,6 +207,10 @@ export enum WidgetType {
     NotesOverview = 'NotesOverview',
     QuickLinks = 'QuickLinks',
     PeopleHub = 'PeopleHub',
+    PriorityBreakdown = 'PriorityBreakdown',
+    Workload = 'Workload',
+    RecentActivity = 'RecentActivity',
+    TodaySchedule = 'TodaySchedule',
 }
 
 export interface WidgetLayout {

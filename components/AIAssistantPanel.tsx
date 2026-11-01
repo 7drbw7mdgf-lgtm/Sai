@@ -34,6 +34,21 @@ interface Message {
     toolCall?: ToolCall;
 }
 
+const AI_CHAT_MODELS = [
+    {
+        id: 'gemini-2.5-flash',
+        name: 'Gemini 2.5 Flash',
+        description: 'Fast project assistant',
+    },
+    {
+        id: 'gemma-4-31b-it',
+        name: 'Gemma 4',
+        description: 'Open model',
+    },
+] as const;
+
+type AIChatModelId = typeof AI_CHAT_MODELS[number]['id'];
+
 const CreateTaskWidget: React.FC<{ args: any, onConfirm: (task: Task) => void, onCancel: () => void, people: any[] }> = ({ args, onConfirm, onCancel, people }) => {
     const [name, setName] = useState(args.name || '');
     const [date, setDate] = useState(args.due_date || new Date().toISOString().split('T')[0]);
@@ -155,6 +170,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ isOpen, onClose, pr
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'chat' | 'audio'>('chat');
+    const [selectedModel, setSelectedModel] = useState<AIChatModelId>('gemini-2.5-flash');
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
     
@@ -250,7 +266,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ isOpen, onClose, pr
             const context = formatProjectContext();
             
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: selectedModel,
                 contents: [
                     { role: 'user', parts: [{ text: `System: You are a helpful project assistant. Use the provided tools to help the user manage their project. Context:\n\n${context}` }] },
                     // Simplify history for demo - ideally pass full history
@@ -375,7 +391,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ isOpen, onClose, pr
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                 <div className="flex items-center gap-2">
                     <SparklesIcon className="w-6 h-6 text-yellow-300" />
-                    <div><h2 className="text-lg font-bold">Project Assistant</h2><p className="text-xs text-blue-100 opacity-90">Powered by Gemini 2.5</p></div>
+                    <div><h2 className="text-lg font-bold">Project Assistant</h2><p className="text-xs text-blue-100 opacity-90">Powered by {AI_CHAT_MODELS.find(model => model.id === selectedModel)?.name}</p></div>
                 </div>
                 <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition-colors"><XCircleIcon className="w-6 h-6" /></button>
             </div>
@@ -388,6 +404,22 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ isOpen, onClose, pr
             <div className="flex-1 overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-800/50">
                 {activeTab === 'chat' ? (
                     <>
+                        <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-400">AI Service</p>
+                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{AI_CHAT_MODELS.find(model => model.id === selectedModel)?.description}</p>
+                            </div>
+                            <select
+                                aria-label="AI model"
+                                value={selectedModel}
+                                onChange={(e) => setSelectedModel(e.target.value as AIChatModelId)}
+                                className="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-700 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                            >
+                                {AI_CHAT_MODELS.map(model => (
+                                    <option key={model.id} value={model.id}>{model.name}</option>
+                                ))}
+                            </select>
+                        </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {messages.length === 0 && (
                                 <div className="text-center text-gray-500 dark:text-gray-400 mt-10">

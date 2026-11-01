@@ -57,7 +57,6 @@ const Header: React.FC<HeaderProps> = ({
         { id: View.GANTT, name: 'Gantt' },
         { id: View.TASKS, name: 'Tasks' },
         { id: View.CALENDAR, name: 'Calendar' },
-        { id: View.NOTES, name: 'Notes' },
     ];
 
     return (
@@ -136,11 +135,6 @@ const Header: React.FC<HeaderProps> = ({
                 <Tooltip text="Keyboard Shortcuts (?)">
                     <button onClick={onOpenShortcutHelp} className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                         <QuestionMarkCircleIcon className="w-6 h-6" />
-                    </button>
-                </Tooltip>
-                <Tooltip text="Manage Team">
-                    <button onClick={onTogglePeopleHub} className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                        <PeopleManagementIcon className="w-6 h-6" />
                     </button>
                 </Tooltip>
             </div>

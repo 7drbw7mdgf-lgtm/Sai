@@ -18,6 +18,10 @@ import { CheckCircleIcon, CheckCircleIconSolid } from './icons/CheckCircleIcon';
 import ColorSwatchPicker from './ColorSwatchPicker';
 import { PaintBrushIcon } from './icons/PaintBrushIcon';
 import { ChevronDownIcon } from './icons/ChevronIcons';
+import { GoogleCalendarIcon } from './icons/GoogleCalendarIcon';
+import { OutlookIcon } from './icons/OutlookIcon';
+import { SyncArrowsIcon } from './icons/SyncArrowsIcon';
+import { createGoogleCalendarUrl, createOutlookCalendarUrl, downloadICSFile } from '../services/calendarSync';
 
 
 const AssigneeEditor: React.FC<{people: Person[], assignedTo: string[], onToggle: (personId: string) => void}> = ({ people, assignedTo, onToggle }) => {
@@ -249,6 +253,50 @@ const MeetingDetailPanel: React.FC<MeetingDetailPanelProps> = ({ meetingId, proj
                                 onChange={e => updateMeeting({ endTime: e.target.value })} 
                                 className="w-full bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
+                        </div>
+                    </div>
+                </PillAccordion>
+
+                <PillAccordion title={<><SyncArrowsIcon className="w-5 h-5 text-gray-500" /><span className="font-semibold">Calendar Sync & Export</span></>} defaultOpen>
+                    <div className="p-2 space-y-3">
+                        <div className="text-xs text-gray-500">
+                            Push this meeting to your external calendar in 1 click:
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <a
+                                href={createGoogleCalendarUrl({
+                                    title: meeting.title,
+                                    start: meeting.date,
+                                    end: meeting.date,
+                                    startTime: meeting.startTime,
+                                    endTime: meeting.endTime,
+                                    description: meeting.agenda,
+                                    location: meeting.location,
+                                })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 text-xs font-semibold text-gray-700 transition-colors shadow-sm"
+                            >
+                                <GoogleCalendarIcon className="w-4 h-4 flex-shrink-0" />
+                                <span>Google Calendar</span>
+                            </a>
+                            <a
+                                href={createOutlookCalendarUrl({
+                                    title: meeting.title,
+                                    start: meeting.date,
+                                    end: meeting.date,
+                                    startTime: meeting.startTime,
+                                    endTime: meeting.endTime,
+                                    description: meeting.agenda,
+                                    location: meeting.location,
+                                })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-gray-200 hover:border-sky-400 hover:bg-sky-50/50 text-xs font-semibold text-gray-700 transition-colors shadow-sm"
+                            >
+                                <OutlookIcon className="w-4 h-4 flex-shrink-0" />
+                                <span>Outlook</span>
+                            </a>
                         </div>
                     </div>
                 </PillAccordion>

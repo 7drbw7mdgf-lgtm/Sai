@@ -4,28 +4,41 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Project Guru</title>
+  <title>Sai</title>
   <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoVBL5gI9kknDUH2soBHFrDCVgjLAg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:wght@400;600;700&family=Inconsolata:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Manrope:wght@500;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --color-primary-50: 239 246 255;
-      --color-primary-100: 219 234 254;
-      --color-primary-200: 191 219 254;
-      --color-primary-300: 147 197 253;
-      --color-primary-500: 59 130 246;
-      --color-primary-600: 37 99 235;
-      --color-primary-700: 29 78 216;
-      --color-primary-800: 30 64 175;
+      /* Sparkboard Brand Coral Palette */
+      --color-primary-50: 254 242 240;
+      --color-primary-100: 254 226 220;
+      --color-primary-200: 252 201 189;
+      --color-primary-300: 248 162 143;
+      --color-primary-500: 239 117 78;
+      --color-primary-600: 235 98 56;
+      --color-primary-700: 216 79 40;
+      --color-primary-800: 174 65 34;
 
-      --font-family-body: 'Inter', sans-serif;
-      --font-size-base: 16px;
-      --text-color-base: #374151;
-      --text-color-heading: #111827;
-      --text-color-link: #2563eb;
+      /* Sparkboard Authentic Theme Variables */
+      --sb-yellow: #f8df87;
+      --sb-green: #dce7cc;
+      --sb-coral: #edcbbd;
+      --sb-lavender: #e8ddf1;
+      --sb-blue: #cde4e7;
+      --sb-border: #e6e6e2;
+      --sb-text: #292c31;
+      --sb-primary: #ef754e;
+      --sb-primary-hover: #d85f3b;
+
+      --font-family-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-family-heading: 'Manrope', 'DM Sans', sans-serif;
+      --font-size-base: 15px;
+      --text-color-base: #292c31;
+      --text-color-heading: #1a1c1e;
+      --text-color-link: #ef754e;
 
       --sidebar-bg: #ffffff;
       --sidebar-icon-color: #6b7280;
@@ -351,6 +364,41 @@
         color: var(--notes-callout-text-text);
     }
 
+    /* Sparkboard Canvas Dot Grid */
+    .spark-canvas-grid {
+      background-color: #f9faf7;
+      background-image: radial-gradient(#d8dcd5 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+    .dark .spark-canvas-grid {
+      background-color: #1a1c1e;
+      background-image: radial-gradient(#2d3135 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+
+    /* Sparkboard Card Color Variations */
+    .sb-card-yellow { background-color: #fefcf3; border-color: #fae69e; }
+    .sb-card-green  { background-color: #f6faf2; border-color: #d6e8c4; }
+    .sb-card-coral  { background-color: #fcf4f1; border-color: #f2cbbe; }
+    .sb-card-lavender { background-color: #f8f5fc; border-color: #e4d7f5; }
+    .sb-card-blue   { background-color: #f2f9fb; border-color: #c7e6ea; }
+    .sb-card-white  { background-color: #ffffff; border-color: #e6e6e2; }
+
+    .dark .sb-card-yellow { background-color: #272518; border-color: #4a4220; }
+    .dark .sb-card-green  { background-color: #1a241c; border-color: #2b4530; }
+    .dark .sb-card-coral  { background-color: #281c19; border-color: #4d2b24; }
+    .dark .sb-card-lavender { background-color: #231c29; border-color: #402f4f; }
+    .dark .sb-card-blue   { background-color: #172328; border-color: #24414b; }
+    .dark .sb-card-white  { background-color: #212429; border-color: #33383f; }
+
+    /* Sparkboard Eyebrow Badge */
+    .spark-eyebrow {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #7d8574;
+    }
   </style>
 <script type="importmap">
 {
@@ -366,7 +414,7 @@
 <script>
   // Prevent FOUC for dark mode
   try {
-    const settings = localStorage.getItem('project-guru-settings');
+    const settings = localStorage.getItem('sai-settings');
     if (settings && JSON.parse(settings).darkMode) {
       document.documentElement.classList.add('dark');
     }

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TASK_COLORS } from '../constants';
 
-const RECENT_COLORS_KEY = 'project_guru_recent_colors';
+const RECENT_COLORS_KEY = 'sai_recent_colors';
 const MAX_RECENT_COLORS = 7;
 
 interface ColorSwatchPickerProps {
