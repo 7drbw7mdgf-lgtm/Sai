@@ -1,36 +1,33 @@
 
-import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { ProjectData, Task, Group, Assignment, View } from '../types';
+import React, { useState, useRef, useMemo, useCallback, useEffect, useLayoutEffect } from 'react';
+import { ProjectData, Task, Group, Assignment } from '../types';
 import TaskSidebar from './TaskSidebar';
 import Timeline from './Timeline';
 import HorizontalScrollbar from './HorizontalScrollbar';
-import ViewControls from './ViewControls';
+import ViewControls, { MIN_ZOOM, MAX_ZOOM } from './ViewControls';
 import { diffInDays } from '../services/dateUtils';
 import AddGroupModal from './AddGroupModal';
 import GanttTaskDetailPanel from './GanttTaskDetailPanel';
-
-type DisplayItem =
-    | { type: 'task'; data: Task; hasAssignments: boolean }
-    | { type: 'group'; data: Group }
-    | { type: 'assignment'; data: Assignment };
+import {
+    DisplayItem, Dependency, DragPreview, GanttViewMode, GroupSpan,
+    layoutRows, FOOTER_HEIGHT,
+} from './ganttLayout';
 
 interface GanttChartProps {
     projectData: ProjectData;
     onSetData: (data: (prev: ProjectData | null) => ProjectData | null) => void;
     zoom: number;
-    ganttViewMode: 'day' | 'week' | 'month';
-    onGanttViewModeChange: (mode: 'day' | 'week' | 'month') => void;
+    ganttViewMode: GanttViewMode;
+    onGanttViewModeChange: (mode: GanttViewMode) => void;
     onRequestAddTask: () => void;
     onRequestEditTask: (taskId: string) => void;
     dependencyLink: { type: 'prerequisite' | 'postrequisite', fromTaskId: string } | null;
     onStartDependencyLink: (taskId: string, type: 'prerequisite' | 'postrequisite') => void;
     onLinkTask: (toTaskId: string) => void;
+    onCancelLinking: () => void;
     onRemoveDependency: (sourceId: string, targetId: string) => void;
 }
 
-const ROW_HEIGHT = 60;
-const GROUP_ROW_HEIGHT = 40;
-const ASSIGNMENT_ROW_HEIGHT = 40;
 const DEFAULT_SIDEBAR_WIDTH = 400;
 const MIN_SIDEBAR_WIDTH = 240;
 const MAX_SIDEBAR_WIDTH = 750;
@@ -107,7 +104,7 @@ const sortGroupsByDependencies = (groups: Group[], tasks: Task[]): Group[] => {
 
     for (const task of tasks) {
         const toGroupId = task.groupId;
-        if (!toGroupId) continue;
+        if (!toGroupId || !groupMap.has(toGroupId)) continue;
 
         for (const depId of task.dependencies || []) {
             const fromGroupId = taskToGroupMap.get(depId);
@@ -151,12 +148,27 @@ const sortGroupsByDependencies = (groups: Group[], tasks: Task[]): Group[] => {
     return sorted;
 };
 
+const computeGroupSpan = (groupTasks: Task[]): GroupSpan | null => {
+    if (groupTasks.length === 0) return null;
+    let start = groupTasks[0].startDate;
+    let end = groupTasks[0].endDate;
+    let weighted = 0;
+    let totalDays = 0;
+    for (const t of groupTasks) {
+        if (t.startDate < start) start = t.startDate;
+        if (t.endDate > end) end = t.endDate;
+        const days = Math.max(1, diffInDays(t.startDate, t.endDate) + 1);
+        weighted += (t.completion || 0) * days;
+        totalDays += days;
+    }
+    return { startDate: start, endDate: end, completion: totalDays ? Math.round(weighted / totalDays) : 0 };
+};
 
 const GanttChart: React.FC<GanttChartProps> = ({
     projectData, onSetData, zoom: initialZoom, ganttViewMode, onGanttViewModeChange, onRequestAddTask, onRequestEditTask,
-    dependencyLink, onStartDependencyLink, onLinkTask, onRemoveDependency
+    dependencyLink, onStartDependencyLink, onLinkTask, onCancelLinking, onRemoveDependency
 }) => {
-    const { projectStartDate, tasks, groups, people, assignments = [] } = projectData;
+    const { projectStartDate, projectEndDate, tasks, groups, assignments = [] } = projectData;
 
     const [currentZoom, setCurrentZoom] = useState(initialZoom);
     const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -224,6 +236,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
     const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
     const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false);
+    const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
+    const [viewportWidth, setViewportWidth] = useState(0);
 
     const timelineScrollRef = useRef<HTMLDivElement>(null);
     const sidebarScrollRef = useRef<HTMLDivElement>(null);
@@ -231,6 +245,60 @@ const GanttChart: React.FC<GanttChartProps> = ({
     useEffect(() => {
         setCurrentZoom(initialZoom);
     }, [initialZoom]);
+
+    // Track the visible width of the timeline so the grid can always fill it.
+    useLayoutEffect(() => {
+        const el = timelineScrollRef.current;
+        if (!el) return;
+        const update = () => setViewportWidth(el.clientWidth);
+        update();
+        const observer = new ResizeObserver(update);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    // When the zoom level changes, keep the date in the middle of the viewport fixed.
+    // If the previous zoom fitted entirely on screen there is no meaningful "middle",
+    // so keep the left edge (the project start) instead.
+    const prevZoomRef = useRef(currentZoom);
+    const prevOverflowedRef = useRef(false);
+    useLayoutEffect(() => {
+        const el = timelineScrollRef.current;
+        const prevZoom = prevZoomRef.current;
+        prevZoomRef.current = currentZoom;
+        if (!el || prevZoom === currentZoom) return;
+        if (!prevOverflowedRef.current) {
+            el.scrollLeft = 0;
+            return;
+        }
+        const centerDay = (el.scrollLeft + el.clientWidth / 2) / prevZoom;
+        el.scrollLeft = Math.max(0, centerDay * currentZoom - el.clientWidth / 2);
+    }, [currentZoom]);
+    useLayoutEffect(() => {
+        const el = timelineScrollRef.current;
+        if (el) prevOverflowedRef.current = el.scrollWidth > el.clientWidth + 1;
+    });
+
+    // On first render, bring today into view (if it falls inside the project).
+    const hasScrolledToTodayRef = useRef(false);
+    useLayoutEffect(() => {
+        const el = timelineScrollRef.current;
+        if (!el || hasScrolledToTodayRef.current || viewportWidth === 0) return;
+        hasScrolledToTodayRef.current = true;
+        const todayOffset = diffInDays(projectStartDate, new Date());
+        const totalDays = diffInDays(projectStartDate, projectEndDate) + 1;
+        if (todayOffset > 0 && todayOffset < totalDays) {
+            el.scrollLeft = Math.max(0, (todayOffset - 3) * currentZoom);
+        }
+    }, [viewportWidth, projectStartDate, projectEndDate, currentZoom]);
+
+    // Esc cancels an in-progress dependency link.
+    useEffect(() => {
+        if (!dependencyLink) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancelLinking(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [dependencyLink, onCancelLinking]);
 
     const handleScroll = () => {
         if (timelineScrollRef.current && sidebarScrollRef.current) {
@@ -243,18 +311,49 @@ const GanttChart: React.FC<GanttChartProps> = ({
         const timelineEl = timelineScrollRef.current;
         if (!sidebarEl || !timelineEl) return;
 
+        // Over the sidebar: scroll the timeline vertically (the sidebar mirrors it).
         const handleSidebarWheel = (e: WheelEvent) => {
             e.preventDefault();
             timelineEl.scrollTop += e.deltaY;
         };
 
+        // Over the timeline: horizontal wheel / shift+wheel pans, ctrl/cmd+wheel zooms.
+        const handleTimelineWheel = (e: WheelEvent) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                setCurrentZoom(z => {
+                    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+                    return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(z * factor)));
+                });
+                return;
+            }
+            const dx = e.deltaX !== 0 ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
+            if (dx !== 0) {
+                e.preventDefault();
+                timelineEl.scrollLeft += dx;
+            }
+        };
+
         sidebarEl.addEventListener('wheel', handleSidebarWheel, { passive: false });
+        timelineEl.addEventListener('wheel', handleTimelineWheel, { passive: false });
 
         return () => {
             sidebarEl.removeEventListener('wheel', handleSidebarWheel);
+            timelineEl.removeEventListener('wheel', handleTimelineWheel);
         };
     }, []);
-    
+
+    // While a bar is being dragged we render from a local preview and only write to
+    // project data (and undo history) once, when the drag ends.
+    const effectiveTasks = useMemo(() => {
+        if (!dragPreview) return tasks;
+        return tasks.map(t => t.id === dragPreview.taskId
+            ? { ...t, startDate: dragPreview.startDate, endDate: dragPreview.endDate }
+            : t);
+    }, [tasks, dragPreview]);
+
+    const tasksById = useMemo(() => new Map(effectiveTasks.map(t => [t.id, t])), [effectiveTasks]);
+
     const assignmentsByTaskId = useMemo(() => {
         return assignments.reduce((acc, assignment) => {
             if (!acc[assignment.taskId]) acc[assignment.taskId] = [];
@@ -265,42 +364,35 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
     const displayItems = useMemo(() => {
         const items: DisplayItem[] = [];
-        
-        const sortedGroups = sortGroupsByDependencies(groups, tasks);
-        
-        sortedGroups.forEach(group => {
-            items.push({ type: 'group', data: group });
-            if (!collapsedGroups.has(group.id)) {
-                const groupTasks = tasks.filter(t => t.groupId === group.id);
-                const sortedGroupTasks = topologicalSortTasks(groupTasks);
-                
-                sortedGroupTasks.forEach(task => {
-                    const taskAssignments = assignmentsByTaskId[task.id] || [];
-                    items.push({ type: 'task', data: task, hasAssignments: taskAssignments.length > 0 });
-                    if (expandedTasks.has(task.id)) {
-                        taskAssignments.forEach(assignment => {
-                            items.push({ type: 'assignment', data: assignment });
-                        });
-                    }
-                });
-            }
-        });
-        
-        const ungroupedTasks = tasks.filter(t => !t.groupId);
-        const sortedUngroupedTasks = topologicalSortTasks(ungroupedTasks);
-        
-        sortedUngroupedTasks.forEach(task => {
+        const groupIds = new Set(groups.map(g => g.id));
+
+        const pushTask = (task: Task) => {
             const taskAssignments = assignmentsByTaskId[task.id] || [];
             items.push({ type: 'task', data: task, hasAssignments: taskAssignments.length > 0 });
             if (expandedTasks.has(task.id)) {
                 taskAssignments.forEach(assignment => {
-                    items.push({ type: 'assignment', data: assignment });
+                    items.push({ type: 'assignment', data: assignment, color: task.color });
                 });
+            }
+        };
+
+        sortGroupsByDependencies(groups, effectiveTasks).forEach(group => {
+            const groupTasks = effectiveTasks.filter(t => t.groupId === group.id);
+            items.push({ type: 'group', data: group, span: computeGroupSpan(groupTasks) });
+            if (!collapsedGroups.has(group.id)) {
+                topologicalSortTasks(groupTasks).forEach(pushTask);
             }
         });
 
+        // Tasks with no group, or whose group no longer exists, are listed at the end.
+        const ungroupedTasks = effectiveTasks.filter(t => !t.groupId || !groupIds.has(t.groupId));
+        topologicalSortTasks(ungroupedTasks).forEach(pushTask);
+
         return items;
-    }, [groups, tasks, collapsedGroups, expandedTasks, assignmentsByTaskId]);
+    }, [groups, effectiveTasks, collapsedGroups, expandedTasks, assignmentsByTaskId]);
+
+    // One layout shared by the sidebar, the bars, the grid and the dependency arrows.
+    const { rows, totalHeight } = useMemo(() => layoutRows(displayItems), [displayItems]);
 
     const handleToggleGroup = (groupId: string) => {
         setCollapsedGroups(prev => {
@@ -336,6 +428,17 @@ const GanttChart: React.FC<GanttChartProps> = ({
         window.setTimeout(() => setSelectedTaskId(null), 0);
     };
 
+    const handleDragCommit = useCallback((taskId: string, startDate: Date, endDate: Date) => {
+        setDragPreview(null);
+        onSetData(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                tasks: prev.tasks.map(t => t.id === taskId ? { ...t, startDate, endDate } : t)
+            }
+        });
+    }, [onSetData]);
+
     const handleTaskUpdate = (taskId: string, updates: Partial<Task>) => {
         onSetData(prev => {
             if (!prev) return null;
@@ -367,49 +470,35 @@ const GanttChart: React.FC<GanttChartProps> = ({
     }
 
     const dependencies = useMemo(() => {
-        const deps: any[] = [];
-        let currentY = 0;
-        const taskPositions: { [key: string]: { y: number; start: Date, end: Date } } = {};
-
-        displayItems.forEach(item => {
-            if (item.type === 'task') {
-                taskPositions[item.data.id] = { y: currentY + ROW_HEIGHT / 2, start: item.data.startDate, end: item.data.endDate };
-                currentY += ROW_HEIGHT;
-            } else if(item.type === 'group') {
-                currentY += GROUP_ROW_HEIGHT;
-            } else if (item.type === 'assignment') {
-                currentY += ASSIGNMENT_ROW_HEIGHT;
-            }
+        const deps: Dependency[] = [];
+        const rowCenterY = new Map<string, number>();
+        rows.forEach(row => {
+            if (row.item.type === 'task') rowCenterY.set(row.item.data.id, row.top + row.height / 2);
         });
 
-        tasks.forEach(task => {
+        effectiveTasks.forEach(task => {
             (task.dependencies || []).forEach(depId => {
-                const sourceTaskPos = taskPositions[depId];
-                const targetTaskPos = taskPositions[task.id];
-                if (sourceTaskPos && targetTaskPos) {
-                    const sourceTask = tasks.find(t => t.id === depId);
-                    if (!sourceTask) return;
-                    
-                    const sourceStartOffset = diffInDays(projectStartDate, sourceTask.startDate);
-                    const sourceDuration = diffInDays(sourceTask.startDate, sourceTask.endDate) + 1;
-                    
-                    deps.push({
-                        sourceId: depId,
-                        targetId: task.id,
-                        start: {
-                            x: (sourceStartOffset + sourceDuration) * currentZoom,
-                            y: sourceTaskPos.y,
-                        },
-                        end: {
-                            x: diffInDays(projectStartDate, targetTaskPos.start) * currentZoom,
-                            y: targetTaskPos.y,
-                        },
-                    });
-                }
+                const sourceY = rowCenterY.get(depId);
+                const targetY = rowCenterY.get(task.id);
+                const sourceTask = tasksById.get(depId);
+                if (sourceY === undefined || targetY === undefined || !sourceTask) return;
+
+                deps.push({
+                    sourceId: depId,
+                    targetId: task.id,
+                    start: {
+                        x: (diffInDays(projectStartDate, sourceTask.endDate) + 1) * currentZoom,
+                        y: sourceY,
+                    },
+                    end: {
+                        x: diffInDays(projectStartDate, task.startDate) * currentZoom,
+                        y: targetY,
+                    },
+                });
             });
         });
         return deps;
-    }, [displayItems, tasks, projectStartDate, currentZoom]);
+    }, [rows, effectiveTasks, tasksById, projectStartDate, currentZoom]);
 
     const handleScrollToToday = () => {
         if (timelineScrollRef.current) {
@@ -428,10 +517,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
                 onSelectTask={setSelectedTaskId}
                 onEditTask={onRequestEditTask}
                 selectedTaskId={selectedTaskId}
-                displayItems={displayItems}
-                rowHeight={ROW_HEIGHT}
-                groupRowHeight={GROUP_ROW_HEIGHT}
-                assignmentRowHeight={ASSIGNMENT_ROW_HEIGHT}
+                rows={rows}
+                totalHeight={totalHeight}
                 collapsedGroups={collapsedGroups}
                 onToggleGroup={handleToggleGroup}
                 expandedTasks={expandedTasks}
@@ -519,26 +606,33 @@ const GanttChart: React.FC<GanttChartProps> = ({
                     </div>
                 </div>
                 {dependencyLink && (
-                    <div className="absolute left-1/2 top-[68px] z-40 -translate-x-1/2 rounded-full border border-[#ef754e]/30 bg-[#fdf2ee] px-4 py-2 text-xs font-bold text-[#ef754e] shadow-lg">
-                        Click another task bar to create a dependency link
+                    <div className="absolute left-1/2 top-[68px] z-40 -translate-x-1/2 flex items-center gap-3 rounded-full border border-[#ef754e]/30 bg-[#fdf2ee] pl-4 pr-1.5 py-1.5 text-xs font-bold text-[#ef754e] shadow-lg whitespace-nowrap">
+                        <span>
+                            {dependencyLink.type === 'prerequisite'
+                                ? `Click a task that should follow “${tasksById.get(dependencyLink.fromTaskId)?.name ?? 'this task'}”`
+                                : `Click a task that “${tasksById.get(dependencyLink.fromTaskId)?.name ?? 'this task'}” depends on`}
+                        </span>
+                        <button onClick={onCancelLinking} className="rounded-full bg-white/80 hover:bg-white px-2.5 py-0.5 text-[#c2410c]">Cancel (Esc)</button>
                     </div>
                 )}
                 <div 
                     ref={timelineScrollRef}
                     onScroll={handleScroll}
-                    className="flex-grow overflow-auto relative no-x-scrollbar"
+                    className="flex-grow overflow-y-auto overflow-x-hidden relative"
                 >
                     <Timeline
-                        projectData={projectData}
-                        displayItems={displayItems}
+                        projectStartDate={projectStartDate}
+                        projectEndDate={projectEndDate}
+                        rows={rows}
+                        totalHeight={totalHeight}
+                        viewportWidth={viewportWidth}
                         zoom={currentZoom}
                         ganttViewMode={ganttViewMode}
-                        rowHeight={ROW_HEIGHT}
-                        groupRowHeight={GROUP_ROW_HEIGHT}
-                        assignmentRowHeight={ASSIGNMENT_ROW_HEIGHT}
                         selectedTaskId={selectedTaskId}
                         onSelectTask={setSelectedTaskId}
                         onTaskUpdate={handleTaskUpdate}
+                        onDragPreview={setDragPreview}
+                        onDragCommit={handleDragCommit}
                         onRequestEditTask={onRequestEditTask}
                         dependencyLink={dependencyLink}
                         onLinkTask={onLinkTask}
@@ -547,7 +641,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
                         onRemoveDependency={onRemoveDependency}
                     />
                 </div>
-                <div className="flex-shrink-0 p-3 border-t border-l border-gray-200 dark:border-gray-700">
+                <div
+                    className="flex-shrink-0 flex items-center px-4 border-t border-[#e6e6e2] dark:border-gray-800"
+                    style={{ height: FOOTER_HEIGHT }}
+                >
                     <HorizontalScrollbar scrollRef={timelineScrollRef} />
                 </div>
             </div>
@@ -561,21 +658,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                         onSetData={onSetData}
                         onClose={() => setSelectedTaskId(null)}
                         isOpen={!!selectedTaskId}
-                        onStartLinking={(type) => {
-                            // We need to hoist this up to App but for now we can try to handle in Gantt if logic allows, 
-                            // or we assume App handles it via prop. The prop is available here.
-                            // However, the prop expects to be called from App level state.
-                            // We need to adapt this: GanttChart receives onRequestEditTask which opens the App-level modal.
-                            // But here we are in the internal panel.
-                            // We can check if we have a handler for dependency linking passed to GanttChart
-                            // We don't have onStartLinking passed to GanttChart props explicitly for this panel usage yet.
-                            // But wait, dependencyLink state is in App. We need a way to set it.
-                            // The prop 'onRequestEditTask' opens the modal.
-                            // We can assume for now that this internal panel is for quick view/edits. 
-                            // Dependency linking is complex and currently tied to App state.
-                            // Let's disable dependency linking from this quick view or reuse the prop if we can add it.
-                            // For now, passing undefined to disable it in the quick view to avoid state mismatch complexity.
-                        }}
+                        onStartLinking={(type) => handleStartDependencyFromNode(selectedTaskId, type)}
                         onRemoveDependency={onRemoveDependency}
                     />
                 </div>

@@ -4,7 +4,7 @@ import Tooltip from './Tooltip';
 import { ZoomOutIcon } from './icons/ZoomOutIcon';
 import { ZoomInIcon } from './icons/ZoomInIcon';
 
-type GanttViewMode = 'day' | 'week' | 'month';
+import { GanttViewMode } from './ganttLayout';
 
 interface ViewControlsProps {
     viewMode: GanttViewMode;
@@ -13,8 +13,8 @@ interface ViewControlsProps {
     onZoomChange: (zoom: number) => void;
 }
 
-const MIN_ZOOM = 2;
-const MAX_ZOOM = 100;
+export const MIN_ZOOM = 2;
+export const MAX_ZOOM = 100;
 
 const ViewControls: React.FC<ViewControlsProps> = ({ viewMode, onViewModeChange, zoom, onZoomChange }) => {
     

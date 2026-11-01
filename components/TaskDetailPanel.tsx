@@ -476,10 +476,11 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
                      <h3 className="text-sm font-semibold text-gray-500 px-3">Dependencies</h3>
                      {(onStartLinking || onRemoveDependency) && (
                         <div className="flex items-center gap-2 px-3">
-                            <button onClick={() => onStartLinking?.('prerequisite')} className="flex-1 flex items-center justify-center gap-2 text-sm p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-800 rounded-lg transition-colors">
+                            {/* 'postrequisite' => the task you click becomes this task's prerequisite (see App.handleLinkTask) */}
+                            <button onClick={() => onStartLinking?.('postrequisite')} className="flex-1 flex items-center justify-center gap-2 text-sm p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-800 rounded-lg transition-colors">
                                 <LinkIcon className="w-4 h-4"/> Add Prerequisite
                             </button>
-                             <button onClick={() => onStartLinking?.('postrequisite')} className="flex-1 flex items-center justify-center gap-2 text-sm p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-800 rounded-lg transition-colors">
+                             <button onClick={() => onStartLinking?.('prerequisite')} className="flex-1 flex items-center justify-center gap-2 text-sm p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-800 rounded-lg transition-colors">
                                 <LinkIcon className="w-4 h-4 rotate-180"/> Add Postrequisite
                             </button>
                         </div>
