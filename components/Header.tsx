@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import BenchlineLogo from './BenchlineLogo';
+import LabtrailLogo from './LabtrailLogo';
 import { View, SearchResult, ProjectData } from '../types';
 import Tooltip from './Tooltip';
 import DropdownMenu, { MenuItem } from './FileMenu';
@@ -51,8 +51,8 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex min-w-0 items-center gap-4">
                  <div className="flex min-w-0 items-center gap-3">
                     <div className="flex items-center gap-2 cursor-pointer select-none">
-                        <BenchlineLogo className="w-7 h-7" />
-                        <span className="text-xl font-extrabold tracking-tight text-[#292c31] dark:text-gray-100 font-['Manrope']">benchline<span className="text-accent">.</span></span>
+                        <LabtrailLogo className="w-7 h-7" />
+                        <span className="text-xl font-extrabold tracking-tight text-[#292c31] dark:text-gray-100 font-['Manrope']">labtrail<span className="text-accent">.</span></span>
                     </div>
 
                     <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-[#f4f5f0] dark:bg-gray-800 border border-[#e6e6e2] dark:border-gray-700 rounded-full text-[10.5px] font-bold text-[#626e56] dark:text-[#a3b397] tracking-wider uppercase">

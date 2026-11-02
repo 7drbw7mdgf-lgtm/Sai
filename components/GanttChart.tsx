@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo, useCallback, useEffect, useLayoutEffect } from 'react';
-import BenchlineLogo from './BenchlineLogo';
+import LabtrailLogo from './LabtrailLogo';
 import { ProjectData, Task, Group, Assignment } from '../types';
 import TaskSidebar from './TaskSidebar';
 import Timeline from './Timeline';
@@ -570,7 +570,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             <div className="flex-1 flex flex-col min-w-0 relative">
                  <div className="flex-shrink-0 flex items-center justify-between border-b border-[#e6e6e2] dark:border-gray-800 px-4 h-[60px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
                     <div className="flex items-center gap-3">
-                        <BenchlineLogo className="w-5 h-5" />
+                        <LabtrailLogo className="w-5 h-5" />
                         <h2 className="text-sm font-bold text-[#292c31] dark:text-gray-100 font-['Manrope']">Roadmap Timeline</h2>
                         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#f4f5f0] dark:bg-gray-800 text-[11px] font-bold text-[#626e56] dark:text-[#a0ae95] border border-[#e6e6e2] dark:border-gray-700">
                             <span>{tasks.filter(t => t.completion === 100).length} of {tasks.length} done</span>

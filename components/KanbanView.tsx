@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import BenchlineLogo from './BenchlineLogo';
+import LabtrailLogo from './LabtrailLogo';
 import { ProjectData, Task, Priority, Person, Group } from '../types';
 import KanbanCard from './KanbanCard';
 
@@ -197,7 +197,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                     {/* Title & Board Eyebrow */}
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <BenchlineLogo className="w-5 h-5" />
+                            <LabtrailLogo className="w-5 h-5" />
                             <span className="text-xs font-bold uppercase tracking-wider text-[#7a8472] dark:text-[#9ea996]">
                                 Personal Workspace / Board View
                             </span>

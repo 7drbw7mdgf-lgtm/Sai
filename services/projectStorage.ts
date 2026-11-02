@@ -1,5 +1,6 @@
 import { ProjectData } from '../types';
 
+// Keeps its pre-rename name so projects saved under Benchline still load.
 export const PROJECT_STORAGE_KEY = 'benchline.project.v1';
 const UNREADABLE_BACKUP_KEY = `${PROJECT_STORAGE_KEY}.unreadable`;
 
@@ -32,7 +33,7 @@ const textList = (value: unknown): string[] => Array.isArray(value) ? value.filt
 export function parseProject(raw: string): ProjectData {
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.tasks) || !Array.isArray(parsed.groups) || !Array.isArray(parsed.people)) {
-        throw new Error('Not a Benchline project');
+        throw new Error('Not a Labtrail project');
     }
     return {
         ...parsed,
@@ -128,7 +129,7 @@ export function downloadProjectBackup(data: ProjectData): void {
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = `benchline-project-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `labtrail-project-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

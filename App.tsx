@@ -167,7 +167,7 @@ const App: React.FC = () => {
                 if (!parsed.themes || parsed.themes.length === 0) {
                     parsed.themes = DEFAULT_THEMES;
                 }
-                parsed.themes = [...DEFAULT_THEMES.filter(d => !parsed.themes.some(t => t.id === d.id)), ...parsed.themes];
+                parsed.themes = [...DEFAULT_THEMES, ...parsed.themes.filter(t => !DEFAULT_THEMES.some(d => d.id === t.id))];
                 if (!parsed.activeThemeId || !parsed.themes.find(t => t.id === parsed.activeThemeId)) {
                     parsed.activeThemeId = DEFAULT_THEMES[0].id;
                 }
@@ -382,7 +382,7 @@ const App: React.FC = () => {
             restored = parseProject(await file.text());
         } catch (error) {
             console.error('Could not read the backup:', error);
-            setRestoreError(`"${file.name}" isn't a valid Benchline backup, so nothing was changed.`);
+            setRestoreError(`"${file.name}" isn't a valid Labtrail backup, so nothing was changed.`);
             return;
         }
         if (!window.confirm(`Replace your current project with "${file.name}"? You can use Undo to get it back until you reload.`)) return;

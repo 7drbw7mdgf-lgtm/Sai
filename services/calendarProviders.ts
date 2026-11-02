@@ -5,7 +5,7 @@
 
 import { CalendarAuthExpiredError, CalendarProvider, EventInput, RemoteEvent } from './calendarEngine';
 
-const BENCHLINE_CALENDAR_NAME = 'Benchline';
+const LABTRAIL_CALENDAR_NAME = 'Labtrail';
 
 const toDateOnly = (date: Date): string =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -134,11 +134,11 @@ export function createGoogleProvider(clientId: string): CalendarProvider {
             token = null;
         },
 
-        async ensureBenchlineCalendar(knownId) {
+        async ensureLabtrailCalendar(knownId) {
             const calendars = await listCalendars();
-            const existing = calendars.find(c => c.id === knownId) || calendars.find(c => c.summary === BENCHLINE_CALENDAR_NAME && c.accessRole === 'owner');
+            const existing = calendars.find(c => c.id === knownId) || calendars.find(c => c.summary === LABTRAIL_CALENDAR_NAME && c.accessRole === 'owner');
             if (existing) return existing.id;
-            const created = await api('/calendars', { method: 'POST', body: JSON.stringify({ summary: BENCHLINE_CALENDAR_NAME }) });
+            const created = await api('/calendars', { method: 'POST', body: JSON.stringify({ summary: LABTRAIL_CALENDAR_NAME }) });
             return created.id;
         },
 
@@ -174,7 +174,7 @@ export function createGoogleProvider(clientId: string): CalendarProvider {
 const GRAPH_API = 'https://graph.microsoft.com/v1.0';
 const MICROSOFT_AUTHORITY = 'https://login.microsoftonline.com/common/oauth2/v2.0';
 const MICROSOFT_SCOPES = 'offline_access User.Read Calendars.ReadWrite';
-const OAUTH_CHANNEL = 'benchline-oauth';
+const OAUTH_CHANNEL = 'labtrail-oauth';
 const SIGN_IN_TIMEOUT_MS = 5 * 60 * 1000;
 
 const base64Url = (bytes: Uint8Array): string =>
@@ -260,7 +260,7 @@ export function createMicrosoftProvider(clientId: string): CalendarProvider {
 
         async signIn() {
             // Opened before any await so the browser treats it as part of the click.
-            const popup = window.open('', 'benchline-microsoft-sign-in', 'width=520,height=680');
+            const popup = window.open('', 'labtrail-microsoft-sign-in', 'width=520,height=680');
             if (!popup) throw new Error('Allow pop-ups for this page, then try again.');
 
             const state = randomString();
@@ -313,7 +313,7 @@ export function createMicrosoftProvider(clientId: string): CalendarProvider {
             expiresAt = 0;
         },
 
-        async ensureBenchlineCalendar(knownId) {
+        async ensureLabtrailCalendar(knownId) {
             const calendars: any[] = [];
             let next: string | null = '/me/calendars?$select=id,name,canEdit&$top=100';
             while (next) {
@@ -321,9 +321,9 @@ export function createMicrosoftProvider(clientId: string): CalendarProvider {
                 calendars.push(...(page.value || []));
                 next = page['@odata.nextLink'] || null;
             }
-            const existing = calendars.find(c => c.id === knownId) || calendars.find(c => c.name === BENCHLINE_CALENDAR_NAME && c.canEdit);
+            const existing = calendars.find(c => c.id === knownId) || calendars.find(c => c.name === LABTRAIL_CALENDAR_NAME && c.canEdit);
             if (existing) return existing.id;
-            const created = await api('/me/calendars', { method: 'POST', body: JSON.stringify({ name: BENCHLINE_CALENDAR_NAME }) });
+            const created = await api('/me/calendars', { method: 'POST', body: JSON.stringify({ name: LABTRAIL_CALENDAR_NAME }) });
             return created.id;
         },
 

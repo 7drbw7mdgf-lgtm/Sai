@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import BenchlineLogo from './BenchlineLogo';
+import LabtrailLogo from './LabtrailLogo';
 import { ProjectData, WidgetLayout, WidgetType, View, Priority, Task } from '../types';
 import WidgetContainer from './WidgetContainer';
 import AddWidgetModal from './AddWidgetModal';
@@ -412,7 +412,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4">
                         {/* Project Title & Icon */}
                         <div className="flex items-center gap-3.5">
-                            <BenchlineLogo className="w-10 h-10 select-none" />
+                            <LabtrailLogo className="w-10 h-10 select-none" />
                             <div>
                                 <div className="flex items-center gap-2 mb-0.5">
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#7a8472] dark:text-[#9ea996]">
@@ -976,7 +976,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                     className="flex items-center justify-between p-2 rounded-lg hover:bg-accent-soft dark:hover:bg-gray-800 text-[#292c31] dark:text-gray-300 transition-colors font-medium"
                                 >
                                     <span className="flex items-center gap-2">
-                                        <BenchlineLogo className="w-4 h-4" />
+                                        <LabtrailLogo className="w-4 h-4" />
                                         <span>Kanban Sprint Board</span>
                                     </span>
                                     <span className="text-accent font-bold">→</span>

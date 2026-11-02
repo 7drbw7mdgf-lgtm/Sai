@@ -1,7 +1,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AppSettings, ColorSettings, ProjectData, TypographySettings, WidgetLayout } from '../types';
-import BenchlineLogo from './BenchlineLogo';
+import LabtrailLogo from './LabtrailLogo';
 import CalendarSyncPanel from './CalendarSyncPanel';
 import { BUTTON_SECONDARY, FIELD, FormRow, LINE, OptionsGroup } from './OptionsControls';
 
@@ -20,7 +20,7 @@ interface SettingsModalProps {
 
 
 const PAGES: { id: PageId; title: string; description: string }[] = [
-    { id: 'general', title: 'General', description: 'Personalize the way Benchline looks and works on this computer.' },
+    { id: 'general', title: 'General', description: 'Personalize the way Labtrail looks and works on this computer.' },
     { id: 'calendar', title: 'Calendar sync', description: 'Connect your calendars and control how often they refresh.' },
     { id: 'home', title: 'Home screen', description: 'Manage the layout of your dashboard widgets.' },
 ];
@@ -52,7 +52,7 @@ const ColorRow: React.FC<{ label: string; color: string; onChange: (color: strin
 
 const ThemeCard: React.FC<{ label: string; hint: string; checked: boolean; dark: boolean; onSelect: () => void }> = ({ label, hint, checked, dark, onSelect }) => (
     <label className="relative flex min-w-0 cursor-pointer flex-col items-start gap-1">
-        <input type="radio" name="benchlineTheme" checked={checked} onChange={onSelect} className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0" />
+        <input type="radio" name="labtrailTheme" checked={checked} onChange={onSelect} className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0" />
         <div className={`relative h-[68px] w-full overflow-hidden rounded border-2 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-accent ${checked ? 'border-accent' : 'border-[#e6e6e2] dark:border-gray-700'} ${dark ? 'bg-[#1e2024]' : 'bg-[#fbfbf9]'}`}>
             <span className={`absolute inset-y-0 left-0 w-[21%] ${dark ? 'bg-[#33363d]' : 'bg-[#e6e6e2]'}`} />
             <span className={`absolute left-[32%] right-[12%] top-[18px] h-[5px] rounded-sm ${dark ? 'bg-gray-300' : 'bg-[#50564d]'}`} />
@@ -67,7 +67,7 @@ const ThemeCard: React.FC<{ label: string; hint: string; checked: boolean; dark:
 const WorkspacePreview: React.FC = () => (
     <div aria-hidden="true" className={`grid min-h-[164px] grid-cols-[38px_minmax(120px,1fr)] overflow-hidden rounded-[5px] border ${LINE} bg-white dark:bg-[#1e2024] min-[721px]:grid-cols-[38px_minmax(120px,1fr)_minmax(100px,1fr)]`}>
         <div className="flex flex-col items-center gap-4 bg-accent px-2 py-3 text-white">
-            <BenchlineLogo className="h-6 w-6 rounded-[4px] bg-white p-0.5" />
+            <LabtrailLogo className="h-6 w-6 rounded-[4px] bg-white p-0.5" />
             <i className="h-[3px] w-3.5 bg-current opacity-65" />
             <i className="h-[3px] w-3.5 bg-current opacity-65" />
             <i className="h-[3px] w-3.5 bg-current opacity-65" />
@@ -223,7 +223,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentS
                 <div role="radiogroup" aria-label="Accent color" className="flex flex-wrap items-center gap-3">
                     {settings.themes.map(theme => (
                         <label key={theme.id} title={theme.name} className="relative flex h-7 w-7 cursor-pointer items-center justify-center">
-                            <input type="radio" name="benchlineAccent" aria-label={theme.name} checked={settings.activeThemeId === theme.id} onChange={() => applyNow({ activeThemeId: theme.id })} className="peer absolute inset-0 m-0 h-full w-full cursor-pointer opacity-0" />
+                            <input type="radio" name="labtrailAccent" aria-label={theme.name} checked={settings.activeThemeId === theme.id} onChange={() => applyNow({ activeThemeId: theme.id })} className="peer absolute inset-0 m-0 h-full w-full cursor-pointer opacity-0" />
                             <span
                                 className={`h-6 w-6 rounded-full peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${settings.activeThemeId === theme.id ? 'ring-2 ring-[#292c31] ring-offset-2 dark:ring-gray-100 dark:ring-offset-[#1e2024]' : ''}`}
                                 style={{ backgroundColor: theme.colors['500'] }}
@@ -333,8 +333,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentS
             >
                 {/* Title bar */}
                 <header className={`flex min-h-[54px] flex-shrink-0 items-center gap-2.5 border-b ${LINE} px-5`}>
-                    <BenchlineLogo className="h-7 w-7" />
-                    <h2 id="settings-title" className="text-[15px] font-semibold">Benchline Options</h2>
+                    <LabtrailLogo className="h-7 w-7" />
+                    <h2 id="settings-title" className="text-[15px] font-semibold">Labtrail Options</h2>
                     <button type="button" aria-label="Close settings" onClick={onClose} className="ml-auto grid h-[34px] w-[34px] place-items-center rounded-[3px] text-[#50564d] transition-colors hover:bg-[#f0efeb] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent dark:text-gray-300 dark:hover:bg-gray-800">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
                     </button>

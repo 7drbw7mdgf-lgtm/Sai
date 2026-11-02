@@ -25,6 +25,7 @@ export const calendarProviders: Record<CalendarProviderId, CalendarProvider> = {
 };
 
 const PROVIDER_IDS: CalendarProviderId[] = ['google', 'outlook'];
+// Keeps its pre-rename name so existing calendar links still work.
 const LINKS_KEY = 'benchline-calendar-links';
 const INTERVALS_MS: Record<string, number> = { '15m': 15 * 60_000, '1h': 60 * 60_000, daily: 24 * 60 * 60_000 };
 
@@ -116,7 +117,7 @@ export async function syncCalendars(getData: () => ProjectData | null, setData: 
     }
 
     const parts = [
-        totals.created && `${totals.created} added to your Benchline calendar`,
+        totals.created && `${totals.created} added to your Labtrail calendar`,
         totals.updated && `${totals.updated} updated there`,
         totals.pulledChanges && `${totals.pulledChanges} ${totals.pulledChanges === 1 ? 'change' : 'changes'} brought back`,
         totals.imported && `${totals.imported} ${totals.imported === 1 ? 'event' : 'events'} read from your main calendar`,

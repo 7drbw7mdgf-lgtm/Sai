@@ -2,9 +2,9 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Benchline
+# Labtrail
 
-Benchline (formerly *Sai* / *Project Guru*) is a research project planner: a Gantt roadmap with dependencies, Kanban board, list, calendar with Google/Outlook sync, meetings, notes, experiments and an AI assistant.
+Labtrail (formerly *Benchline*, *Sai* and *Project Guru*) is a research project planner: a Gantt roadmap with dependencies, Kanban board, list, calendar with Google/Outlook sync, meetings, notes, experiments and an AI assistant.
 
 ## Run and deploy your AI Studio app
 
@@ -31,7 +31,7 @@ Projects save automatically in this browser. Clearing browser data for this site
 
 Settings > Calendar sync signs in directly with Google and Microsoft from the browser. Each one needs a free app registration in your own account. Add the IDs to `.env.local` (see `.env.local.example`) and restart the dev server.
 
-Use the exact address you open Benchline at. `localhost` and `127.0.0.1` count as different addresses.
+Use the exact address you open Labtrail at. `localhost` and `127.0.0.1` count as different addresses.
 
 **Google Calendar**
 
@@ -52,8 +52,8 @@ Some work or university accounts need an administrator's approval before they ca
 
 **How sync behaves**
 
-- Tasks, assignments and meetings go to a calendar named "Benchline". Your main calendar is only read, and its events appear in Benchline's Calendar view.
-- If you edit an item in both places between syncs, the Benchline version wins.
+- Tasks, assignments and meetings go to a calendar named "Labtrail". Your main calendar is only read, and its events appear in Labtrail's Calendar view.
+- If you edit an item in both places between syncs, the Labtrail version wins.
 - Deleting something on one side doesn't delete it on the other.
 - Sign-ins are kept in memory, so reloading the page means connecting again. Google sign-ins last about an hour and Microsoft's up to 24 hours.
 

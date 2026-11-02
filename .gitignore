@@ -27,6 +27,6 @@ src-tauri/gen
 *.sln
 *.sw?
 
-# Benchline Runtime & User Feedback
+# Labtrail Runtime & User Feedback
 feedback/
 calendar.ics

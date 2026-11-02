@@ -41,8 +41,8 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({ projectDat
     };
 
     const handleDownloadICS = () => {
-        downloadICSFile('benchline-workspace-calendar', generateICS(projectData, config.syncScope));
-        setFileMessage({ type: 'success', text: 'Downloaded benchline-workspace-calendar.ics.' });
+        downloadICSFile('labtrail-workspace-calendar', generateICS(projectData, config.syncScope));
+        setFileMessage({ type: 'success', text: 'Downloaded labtrail-workspace-calendar.ics.' });
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +74,7 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({ projectDat
         <div className="flex flex-col gap-[25px]">
             <OptionsGroup title="Connected calendars">
                 <p className="text-xs leading-relaxed text-[#50564d] dark:text-gray-400">
-                    Benchline puts your work in a new calendar named "Benchline" and only reads your main calendar. You'll need to connect again after reloading this page.
+                    Labtrail puts your work in a new calendar named "Labtrail" and only reads your main calendar. You'll need to connect again after reloading this page.
                 </p>
                 {CALENDARS.map(({ id, icon, setupKey }) => {
                     const connection = connections[id];

@@ -1,7 +1,7 @@
 /**
  * Provider-neutral calendar sync.
  *
- * Benchline's own work goes to a dedicated "Benchline" calendar, so its events are the only ones
+ * Labtrail's own work goes to a dedicated "Labtrail" calendar, so its events are the only ones
  * ever written. The user's main calendar is only read. Deletions are deliberately not propagated
  * in either direction: project data can reset on reload, and that must never remove real events.
  */
@@ -31,7 +31,7 @@ export interface CalendarProvider {
     isConfigured(): boolean;
     signIn(): Promise<string>; // Resolves with the signed-in account's name
     signOut(): void;
-    ensureBenchlineCalendar(knownId?: string): Promise<string>;
+    ensureLabtrailCalendar(knownId?: string): Promise<string>;
     listEvents(calendarId: string | 'primary', range?: { from: Date; to: Date }): Promise<RemoteEvent[]>;
     createEvent(calendarId: string, input: EventInput): Promise<RemoteEvent>;
     updateEvent(calendarId: string, eventId: string, input: EventInput): Promise<RemoteEvent>;
@@ -69,6 +69,7 @@ interface SyncItem {
     input: EventInput;
 }
 
+// Keeps its pre-rename name so events already in calendars are still recognised.
 const REF_PREFIX = 'benchline-ref:';
 
 const combine = (date: Date, time: string | undefined, fallback: string): Date => {
@@ -261,7 +262,7 @@ export async function runSync(
     });
 
     if (config.syncDirection !== 'import-only') {
-        const calendarId = await provider.ensureBenchlineCalendar(links.calendarId);
+        const calendarId = await provider.ensureLabtrailCalendar(links.calendarId);
         if (calendarId !== links.calendarId) {
             links.calendarId = calendarId;
             links.items = {};

@@ -1,5 +1,5 @@
 /**
- * Benchline calendar file and link helpers for Google Calendar & Microsoft Outlook
+ * Labtrail calendar file and link helpers for Google Calendar & Microsoft Outlook
  * Supports RFC 5545 iCalendar (.ics) files and direct 1-click web compose links for Google Calendar and Outlook Web/Desktop.
  */
 
@@ -89,11 +89,11 @@ export function generateICS(
     const lines: string[] = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//Benchline//Project Management Calendar Sync//EN',
+        'PRODID:-//Labtrail//Project Management Calendar Sync//EN',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
-        'X-WR-CALNAME:Benchline Workspace Calendar',
-        'X-WR-CALDESC:Tasks, Milestones & Meetings from Benchline',
+        'X-WR-CALNAME:Labtrail Workspace Calendar',
+        'X-WR-CALDESC:Tasks, Milestones & Meetings from Labtrail',
         'X-WR-TIMEZONE:UTC',
     ];
 
@@ -112,7 +112,7 @@ export function generateICS(
             const desc = [
                 m.agenda ? `Agenda: ${m.agenda}` : '',
                 attendeeNames ? `Attendees: ${attendeeNames}` : '',
-                'Managed via Benchline Dashboard',
+                'Managed via Labtrail Dashboard',
             ]
                 .filter(Boolean)
                 .join('\n');
@@ -197,7 +197,7 @@ export function generateICS(
 }
 
 /**
- * Parses RFC 5545 iCalendar text into Benchline Meetings & Tasks
+ * Parses RFC 5545 iCalendar text into Labtrail Meetings & Tasks
  */
 export function parseICS(
     icsText: string,

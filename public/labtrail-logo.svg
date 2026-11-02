@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Benchline">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Labtrail">
   <defs>
-    <linearGradient id="benchline-body" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="labtrail-body" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#14a594"/>
       <stop offset="1" stop-color="#0b7468"/>
     </linearGradient>
   </defs>
-  <rect x="56" y="110" width="376" height="306" rx="58" fill="url(#benchline-body)"/>
+  <rect x="56" y="110" width="376" height="306" rx="58" fill="url(#labtrail-body)"/>
   <rect x="76" y="190" width="336" height="212" rx="28" fill="#fff"/>
   <rect x="150" y="74" width="34" height="84" rx="17" fill="#0f8f81" stroke="#fff" stroke-width="10"/>
   <rect x="304" y="74" width="34" height="84" rx="17" fill="#0f8f81" stroke="#fff" stroke-width="10"/>

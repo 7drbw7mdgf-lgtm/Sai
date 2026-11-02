@@ -518,7 +518,7 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
                                     title: task.name,
                                     start: task.startDate,
                                     end: task.endDate,
-                                    description: task.notes || `Benchline Task (${task.completion}% complete)`,
+                                    description: task.notes || `Labtrail Task (${task.completion}% complete)`,
                                 })}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -532,7 +532,7 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
                                     title: task.name,
                                     start: task.startDate,
                                     end: task.endDate,
-                                    description: task.notes || `Benchline Task (${task.completion}% complete)`,
+                                    description: task.notes || `Labtrail Task (${task.completion}% complete)`,
                                 })}
                                 target="_blank"
                                 rel="noopener noreferrer"

@@ -1,8 +1,8 @@
 [package]
 name = "sai"
 version = "1.0.0"
-description = "Benchline — interactive Gantt chart project management"
-authors = ["Benchline"]
+description = "Labtrail — interactive Gantt chart project management"
+authors = ["Labtrail"]
 edition = "2021"
 
 [lib]
