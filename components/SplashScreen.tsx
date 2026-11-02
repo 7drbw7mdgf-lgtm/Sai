@@ -146,8 +146,8 @@ const Calendar: React.FC<{ onDatesSelected: (start: Date, end: Date) => void }> 
                     onClick={() => handleDateClick(day)}
                     className={`w-10 h-10 flex items-center justify-center rounded-full cursor-pointer transition-colors
                         ${isDateInRange(day) ? 'bg-blue-500/20 text-blue-800' : ''}
-                        ${isSelectedStart ? '!bg-blue-600 text-white' : ''}
-                        ${isSelectedEnd ? '!bg-blue-600 text-white' : ''}
+                        ${isSelectedStart ? '!bg-accent text-white' : ''}
+                        ${isSelectedEnd ? '!bg-accent text-white' : ''}
                         ${!isDateInRange(day) ? 'hover:bg-gray-100' : ''}
                     `}
                 >
@@ -188,7 +188,7 @@ const Calendar: React.FC<{ onDatesSelected: (start: Date, end: Date) => void }> 
             <button
                 onClick={() => canConfirm && onDatesSelected(startDate, endDate!)}
                 disabled={!canConfirm}
-                className="mt-7 w-full bg-gray-950 text-white font-bold py-3 px-8 rounded-2xl transition-all duration-300 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-80"
+                className="mt-7 w-full bg-gray-950 text-white font-bold py-3 px-8 rounded-2xl transition-all duration-300 hover:bg-accent disabled:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-80"
             >
                 Create workspace
             </button>
@@ -231,7 +231,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onNewProject, onLoadProject
                         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                             <button
                                 onClick={onNewProject}
-                                className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gray-950 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-gray-300 transition-all hover:-translate-y-0.5 hover:bg-blue-600 hover:shadow-blue-200"
+                                className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gray-950 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-gray-300 transition-all hover:-translate-y-0.5 hover:bg-accent hover:shadow-blue-200"
                             >
                                 <TaskPlusIcon className="h-5 w-5" />
                                 New project

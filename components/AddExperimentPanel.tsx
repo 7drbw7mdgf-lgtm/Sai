@@ -123,7 +123,7 @@ const AddExperimentPanel: React.FC<AddExperimentPanelProps> = ({ onClose, onSave
             
             <footer className="flex-shrink-0 p-4 border-t border-gray-200 flex justify-end gap-3 bg-white/50">
                 <button onClick={onClose} className="px-5 py-2 rounded-lg bg-white hover:bg-gray-100 transition-colors font-semibold text-gray-700 border border-gray-200">Cancel</button>
-                <button onClick={handleSave} className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition-colors font-semibold text-white shadow-sm">Create Experiment</button>
+                <button onClick={handleSave} className="px-5 py-2 rounded-lg bg-accent hover:bg-accent-hover transition-colors font-semibold text-white shadow-sm">Create Experiment</button>
             </footer>
         </div>
     );

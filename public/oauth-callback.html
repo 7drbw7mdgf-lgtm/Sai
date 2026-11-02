@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Benchline sign-in</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 14px system-ui, sans-serif; color: #292c31; background: #fbfbf9; }
+    @media (prefers-color-scheme: dark) { body { color: #f3f4f6; background: #17181b; } }
+  </style>
+</head>
+<body>
+  <p>Finishing sign-in. You can close this window.</p>
+  <script>
+    // Hands the sign-in result to the Benchline tab, then removes it from the address bar.
+    const result = window.location.search.slice(1);
+    window.history.replaceState(null, '', window.location.pathname);
+    const channel = new BroadcastChannel('benchline-oauth');
+    channel.postMessage(result);
+    channel.close();
+    window.setTimeout(() => window.close(), 150);
+  </script>
+</body>
+</html>

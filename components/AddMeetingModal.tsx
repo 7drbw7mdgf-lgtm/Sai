@@ -100,7 +100,7 @@ const AddMeetingModal: React.FC<AddMeetingModalProps> = ({ onClose, onSave, peop
                     <div className="p-2">
                         <div className="flex flex-wrap gap-2">
                             {people.map(p => (
-                                <button key={p.id} onClick={() => togglePerson(p.id)} className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm transition-colors ${attendees.includes(p.id) ? 'bg-blue-600 text-white shadow-sm' : 'bg-white hover:bg-gray-200 text-gray-700 border border-gray-200'}`}>
+                                <button key={p.id} onClick={() => togglePerson(p.id)} className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm transition-colors ${attendees.includes(p.id) ? 'bg-accent text-white shadow-sm' : 'bg-white hover:bg-gray-200 text-gray-700 border border-gray-200'}`}>
                                     <img src={p.avatarUrl} alt={p.name} className="w-5 h-5 rounded-full" />
                                     {p.name}
                                 </button>
@@ -129,7 +129,7 @@ const AddMeetingModal: React.FC<AddMeetingModalProps> = ({ onClose, onSave, peop
 
             <footer className="flex-shrink-0 p-4 border-t border-gray-200 flex justify-end gap-3 bg-white/50">
                 <button onClick={onClose} className="px-5 py-2 rounded-lg bg-white hover:bg-gray-100 transition-colors font-semibold text-gray-700 border border-gray-200">Cancel</button>
-                <button onClick={handleSave} className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold text-white shadow-sm">Schedule Meeting</button>
+                <button onClick={handleSave} className="px-5 py-2 rounded-lg bg-accent hover:bg-accent-hover transition-colors font-semibold text-white shadow-sm">Schedule Meeting</button>
             </footer>
         </div>
     );

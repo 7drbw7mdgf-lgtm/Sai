@@ -1,5 +1,6 @@
 import React from 'react';
 import { Note, Person, Task } from '../types';
+import { sanitizeHtml } from '../services/sanitizeHtml';
 
 interface MarkdownRendererProps {
     content: string;
@@ -97,7 +98,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, notes, tas
         }
     };
     
-    const renderedHtml = parseMarkdown(content);
+    const renderedHtml = sanitizeHtml(parseMarkdown(content));
 
     return (
         <div

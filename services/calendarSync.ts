@@ -1,24 +1,11 @@
 /**
- * Benchline Calendar Sync Service for Google Calendar & Microsoft Outlook
- * Supports RFC 5545 iCalendar (.ics) generation, feed syndication, live URL sync,
- * and direct 1-click web compose links for Google Calendar and Outlook Web/Desktop.
+ * Benchline calendar file and link helpers for Google Calendar & Microsoft Outlook
+ * Supports RFC 5545 iCalendar (.ics) files and direct 1-click web compose links for Google Calendar and Outlook Web/Desktop.
  */
 
 import { ProjectData, Task, Meeting, Assignment, Priority } from '../types';
 
 export interface CalendarSyncConfig {
-    googleConnected: boolean;
-    googleAccountEmail: string;
-    googleAutoSync: boolean;
-    googleFeedUrl?: string; // external Google secret address in iCal format
-    googleLastSynced?: string;
-
-    outlookConnected: boolean;
-    outlookAccountEmail: string;
-    outlookAutoSync: boolean;
-    outlookFeedUrl?: string; // external Outlook published ICS/webcal link
-    outlookLastSynced?: string;
-
     syncInterval: 'manual' | '15m' | '1h' | 'daily';
     syncDirection: 'two-way' | 'export-only' | 'import-only';
     syncScope: {
@@ -26,8 +13,6 @@ export interface CalendarSyncConfig {
         assignments: boolean;
         meetings: boolean;
     };
-    lastSyncedAt?: string;
-    itemsSyncedCount: number;
 }
 
 // Storage key and event UIDs (@sai.workspace) keep the pre-rename prefix so existing
@@ -35,26 +20,13 @@ export interface CalendarSyncConfig {
 const STORAGE_KEY = 'sai-calendar-sync-config';
 
 export const DEFAULT_SYNC_CONFIG: CalendarSyncConfig = {
-    googleConnected: true,
-    googleAccountEmail: 'alex.turner@gmail.com',
-    googleAutoSync: true,
-    googleFeedUrl: '',
-    googleLastSynced: undefined,
-
-    outlookConnected: true,
-    outlookAccountEmail: 'alex.turner@outlook.com',
-    outlookAutoSync: false,
-    outlookFeedUrl: '',
-    outlookLastSynced: undefined,
-
-    syncInterval: '15m',
+    syncInterval: 'manual',
     syncDirection: 'two-way',
     syncScope: {
         tasks: true,
         assignments: true,
         meetings: true,
     },
-    itemsSyncedCount: 0,
 };
 
 export function loadSyncConfig(): CalendarSyncConfig {
@@ -443,20 +415,6 @@ export function createOutlookCalendarUrl(event: {
 }
 
 /**
- * Get Google Calendar feed subscription link
- */
-export function getGoogleSubscribeUrl(feedUrl: string): string {
-    return `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feedUrl)}`;
-}
-
-/**
- * Get Microsoft Outlook feed subscription link
- */
-export function getOutlookSubscribeUrl(feedUrl: string): string {
-    return `https://outlook.live.com/calendar/0/addcalendar?url=${encodeURIComponent(feedUrl)}`;
-}
-
-/**
  * Trigger file download of .ics calendar
  */
 export function downloadICSFile(filename: string, content: string): void {
@@ -469,90 +427,4 @@ export function downloadICSFile(filename: string, content: string): void {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-}
-
-/**
- * Sync current project state with local server feed endpoint
- */
-export async function syncWithServerFeed(projectData: ProjectData): Promise<{
-    success: boolean;
-    feedUrl: string;
-    itemsCount: number;
-    timestamp: string;
-    error?: string;
-}> {
-    const config = loadSyncConfig();
-    const icsContent = generateICS(projectData, config.syncScope);
-    const itemsCount =
-        (config.syncScope.tasks ? projectData.tasks.length : 0) +
-        (config.syncScope.meetings ? projectData.meetings.length : 0) +
-        (config.syncScope.assignments ? (projectData.assignments || []).length : 0);
-
-    try {
-        const response = await fetch('/api/calendar/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ics: icsContent,
-                itemsCount,
-            }),
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            const nowIso = new Date().toISOString();
-            config.lastSyncedAt = nowIso;
-            config.itemsSyncedCount = itemsCount;
-            if (config.googleConnected) config.googleLastSynced = nowIso;
-            if (config.outlookConnected) config.outlookLastSynced = nowIso;
-            saveSyncConfig(config);
-
-            return {
-                success: true,
-                feedUrl: data.feedUrl || 'http://localhost:3000/api/calendar/feed.ics',
-                itemsCount,
-                timestamp: nowIso,
-            };
-        } else {
-            throw new Error(`Server returned HTTP ${response.status}`);
-        }
-    } catch (e: any) {
-        console.warn('Local feed sync warning (will fallback to localStorage):', e);
-        const nowIso = new Date().toISOString();
-        config.lastSyncedAt = nowIso;
-        config.itemsSyncedCount = itemsCount;
-        saveSyncConfig(config);
-
-        return {
-            success: true,
-            feedUrl: `${window.location.origin}/api/calendar/feed.ics`,
-            itemsCount,
-            timestamp: nowIso,
-        };
-    }
-}
-
-/**
- * Fetch external iCal feed (Google Calendar or Outlook) via local server proxy
- */
-export async function fetchExternalFeed(url: string, source: 'google' | 'outlook'): Promise<{
-    tasks: Task[];
-    meetings: Meeting[];
-}> {
-    const response = await fetch('/api/calendar/fetch-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch external calendar: HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (!data.success || !data.ics) {
-        throw new Error(data.error || 'Empty response from calendar feed');
-    }
-
-    return parseICS(data.ics, source);
 }

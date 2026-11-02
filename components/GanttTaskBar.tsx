@@ -199,8 +199,8 @@ const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
                     }
                 }}
                 className={`group/bar relative w-full h-full rounded-xl shadow-2xs hover:shadow-md transition-shadow select-none
-                    ${isLinking ? (isLinkSource ? 'ring-2 ring-[#ef754e] cursor-not-allowed' : 'hover:ring-2 ring-[#ef754e] cursor-alias') : (interaction === 'drag' ? 'cursor-grabbing shadow-lg' : 'cursor-grab')}
-                    ${isSelected ? 'ring-2 ring-[#ef754e] ring-offset-2 dark:ring-offset-gray-900 shadow-sm' : ''}
+                    ${isLinking ? (isLinkSource ? 'ring-2 ring-accent cursor-not-allowed' : 'hover:ring-2 ring-accent cursor-alias') : (interaction === 'drag' ? 'cursor-grabbing shadow-lg' : 'cursor-grab')}
+                    ${isSelected ? 'ring-2 ring-accent ring-offset-2 dark:ring-offset-gray-900 shadow-sm' : ''}
                     ${isCompleted ? 'opacity-80 hover:opacity-95' : ''}
                     ${isChangingCompletion ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-gray-900' : ''}
                 `}

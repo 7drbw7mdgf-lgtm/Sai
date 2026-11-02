@@ -106,7 +106,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                     {group && (
                         <span
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-black/5 dark:bg-white/10 text-gray-700 dark:text-gray-300"
-                            style={{ borderLeft: `3px solid ${group.color || '#ef754e'}` }}
+                            style={{ borderLeft: `3px solid ${group.color || 'rgb(var(--color-primary-500))'}` }}
                         >
                             {group.name}
                         </span>
@@ -145,7 +145,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             {/* Task Name */}
             <h4
                 onClick={() => onEdit(task.id)}
-                className={`font-semibold text-sm leading-snug tracking-tight text-[#292c31] dark:text-gray-100 hover:text-[#ef754e] dark:hover:text-[#ef754e] transition-colors cursor-pointer mb-2.5 ${
+                className={`font-semibold text-sm leading-snug tracking-tight text-[#292c31] dark:text-gray-100 hover:text-accent dark:hover:text-accent transition-colors cursor-pointer mb-2.5 ${
                     isDone ? 'line-through text-gray-400 dark:text-gray-500' : ''
                 }`}
             >
@@ -175,7 +175,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                 <div className="w-full h-1.5 bg-gray-200/80 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                         className={`h-full rounded-full transition-all duration-300 ${
-                            isDone ? 'bg-[#10b981]' : 'bg-[#ef754e]'
+                            isDone ? 'bg-[#10b981]' : 'bg-accent'
                         }`}
                         style={{ width: `${Math.min(100, Math.max(0, task.completion))}%` }}
                     />
@@ -195,7 +195,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                         className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors border ${
                             isDone
                                 ? 'bg-[#10b981] border-[#10b981] text-white'
-                                : 'border-gray-300 dark:border-gray-600 hover:border-[#ef754e] text-transparent hover:text-gray-300'
+                                : 'border-gray-300 dark:border-gray-600 hover:border-accent text-transparent hover:text-gray-300'
                         }`}
                     >
                         <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -212,7 +212,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                         <span
                             className={`inline-flex items-center gap-1 text-[11px] font-medium ${
                                 isOverdue
-                                    ? 'text-[#ef754e] font-semibold'
+                                    ? 'text-accent font-semibold'
                                     : 'text-gray-500 dark:text-gray-400'
                             }`}
                         >

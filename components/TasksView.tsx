@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useRef } from 'react';
-import { Task, Person, ProjectData, Priority, Group, CustomField, Assignment } from '../types';
+import { Task, ProjectData, Priority, Group, CustomField, Assignment } from '../types';
 import { PlusIcon } from './icons/PlusIcon';
 import { PRIORITY_ORDER, PRIORITY_COLORS } from '../constants';
 import Tooltip from './Tooltip';
@@ -10,7 +10,7 @@ import TableCustomizationHub from './TableCustomizationHub';
 import { AdjustmentsHorizontalIcon } from './icons/AdjustmentsHorizontalIcon';
 import { CheckCircleIcon, CheckCircleIconSolid } from './icons/CheckCircleIcon';
 
-type SortableListKey = 'name' | 'assignees' | 'startDate' | 'endDate' | 'priority' | 'progress' | 'group' | 'tags' | string; // string for custom fields
+type SortableListKey = 'name' | 'startDate' | 'endDate' | 'priority' | 'progress' | 'group' | 'tags' | string; // string for custom fields
 
 interface TasksViewProps {
     projectData: ProjectData;
@@ -19,9 +19,9 @@ interface TasksViewProps {
 }
 
 const TasksView: React.FC<TasksViewProps> = ({ projectData, onSetData, onRequestEditTask }) => {
-    const { tasks, people, groups, assignments = [], customFields = [] } = projectData;
+    const { tasks, groups, assignments = [], customFields = [] } = projectData;
     const [listSortConfig, setListSortConfig] = useState<{ key: SortableListKey; direction: 'ascending' | 'descending' }>({ key: 'priority', direction: 'descending' });
-    const [visibleColumns, setVisibleColumns] = useState<SortableListKey[]>(['assignees', 'endDate', 'priority', 'progress', 'tags']);
+    const [visibleColumns, setVisibleColumns] = useState<SortableListKey[]>(['endDate', 'priority', 'progress', 'tags']);
     const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
     const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
 
@@ -72,12 +72,6 @@ const TasksView: React.FC<TasksViewProps> = ({ projectData, onSetData, onRequest
                             valA = a.name.toLowerCase();
                             valB = b.name.toLowerCase();
                             break;
-                        case 'assignees':
-                            const aPerson = people.find(p => p.id === a.assignedTo[0]);
-                            const bPerson = people.find(p => p.id === b.assignedTo[0]);
-                            valA = a.assignedTo.length > 0 ? (aPerson?.name.toLowerCase() || '') : 'zzzzzz';
-                            valB = b.assignedTo.length > 0 ? (bPerson?.name.toLowerCase() || '') : 'zzzzzz';
-                            break;
                         case 'startDate':
                             valA = a.startDate.getTime();
                             valB = b.startDate.getTime();
@@ -118,7 +112,7 @@ const TasksView: React.FC<TasksViewProps> = ({ projectData, onSetData, onRequest
             });
         }
         return sortableItems;
-    }, [tasks, people, groups, listSortConfig, customFields]);
+    }, [tasks, groups, listSortConfig, customFields]);
 
     const UnsortedIcon = () => <ChevronDownIcon className="w-3 h-3 opacity-50" />;
 
@@ -155,16 +149,6 @@ const TasksView: React.FC<TasksViewProps> = ({ projectData, onSetData, onRequest
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{task.name}</div>
             </div>
         )},
-        assignees: { title: 'Assignees', render: task => {
-            const assignedPeople = people.filter(p => task.assignedTo.includes(p.id));
-            return <div className="flex items-center -space-x-2">
-                {assignedPeople.map(p => (
-                    <Tooltip key={p.id} text={p.name}>
-                        <img src={p.avatarUrl} alt={p.name} className="w-6 h-6 rounded-full border-2 border-white dark:border-gray-800"/>
-                    </Tooltip>
-                ))}
-            </div>
-        }},
         startDate: { title: 'Start Date', render: task => <span className="text-gray-600 dark:text-gray-400 font-medium">{new Date(task.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span> },
         endDate: { title: 'Due Date', render: task => <span className="text-gray-600 dark:text-gray-400 font-medium">{new Date(task.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span> },
         group: { title: 'Group', render: task => <span className="text-gray-500 dark:text-gray-400">{groups.find(g => g.id === task.groupId)?.name || '-'}</span> },

@@ -71,8 +71,8 @@ const TimeframeModal: React.FC<TimeframeModalProps> = ({ isOpen, onClose, curren
                     onClick={() => handleDateClick(day)}
                     className={`w-10 h-10 flex items-center justify-center rounded-full cursor-pointer transition-colors
                         ${isDateInRange(day) ? 'bg-blue-500/20 text-blue-800' : ''}
-                        ${isSelectedStart ? '!bg-blue-600 text-white' : ''}
-                        ${isSelectedEnd ? '!bg-blue-600 text-white' : ''}
+                        ${isSelectedStart ? '!bg-accent text-white' : ''}
+                        ${isSelectedEnd ? '!bg-accent text-white' : ''}
                         ${!isDateInRange(day) ? 'hover:bg-gray-100' : ''}
                     `}
                 >
@@ -113,7 +113,7 @@ const TimeframeModal: React.FC<TimeframeModalProps> = ({ isOpen, onClose, curren
                 <button
                     onClick={handleConfirm}
                     disabled={!canConfirm}
-                    className="px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-500 transition-colors font-semibold text-white shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="px-5 py-2 rounded-full bg-accent hover:bg-accent-hover transition-colors font-semibold text-white shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                     Save Changes
                 </button>

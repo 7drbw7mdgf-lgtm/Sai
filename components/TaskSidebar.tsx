@@ -54,7 +54,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         <div style={{ width: `${width}px` }} className="flex-shrink-0 bg-white/95 dark:bg-gray-900/95 flex flex-col h-full backdrop-blur-sm select-none">
              <div className="flex justify-between items-center px-4 py-2 flex-shrink-0 h-[60px] border-b border-[#e6e6e2] dark:border-gray-800 bg-white/95 dark:bg-gray-900/95">
                 <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#ef754e]"></span>
+                    <span className="w-2 h-2 rounded-full bg-accent"></span>
                     <h2 className="text-xs font-bold text-[#292c31] dark:text-gray-100 uppercase tracking-wider font-['Manrope']">Project Tasks</h2>
                 </div>
                 <div className="flex items-center gap-1">
@@ -64,7 +64,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                         </button>
                     </Tooltip>
                     <Tooltip text="Add Task">
-                        <button onClick={onAddTask} className="p-1.5 rounded-lg hover:bg-[#f0efeb] dark:hover:bg-gray-800 text-[#ef754e] dark:text-[#ef754e] transition-colors" title="Add Task">
+                        <button onClick={onAddTask} className="p-1.5 rounded-lg hover:bg-[#f0efeb] dark:hover:bg-gray-800 text-accent dark:text-accent transition-colors" title="Add Task">
                             <PlusIcon className="w-4 h-4" />
                         </button>
                     </Tooltip>
@@ -89,7 +89,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                 <div
                                     key={`group-${group.id}`}
                                     onClick={() => onToggleGroup(group.id)}
-                                    className={`flex items-center justify-between px-3 group cursor-pointer bg-[#fafaf8] dark:bg-gray-800/60 border-b border-[#e6e6e2] dark:border-gray-800 font-bold text-xs text-[#292c31] dark:text-gray-200 hover:bg-[#f0efeb] dark:hover:bg-gray-800 transition-all ${dragOverGroupId === group.id ? 'bg-[#fdf2ee] ring-2 ring-[#ef754e]/30 z-10' : ''}`}
+                                    className={`flex items-center justify-between px-3 group cursor-pointer bg-[#fafaf8] dark:bg-gray-800/60 border-b border-[#e6e6e2] dark:border-gray-800 font-bold text-xs text-[#292c31] dark:text-gray-200 hover:bg-[#f0efeb] dark:hover:bg-gray-800 transition-all ${dragOverGroupId === group.id ? 'bg-accent-soft ring-2 ring-accent/30 z-10' : ''}`}
                                     style={{ height }}
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={(e) => {
@@ -105,7 +105,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                 >
                                     <div className="flex items-center gap-2 flex-1 w-0 truncate">
                                         <ChevronRightIcon className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${!isCollapsed ? 'rotate-90' : ''}`} />
-                                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: group.color || '#ef754e' }} />
+                                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: group.color || 'rgb(var(--color-primary-500))' }} />
                                         <span className="truncate text-xs font-bold text-[#292c31] dark:text-gray-100 font-['Manrope']">{group.name}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -165,12 +165,12 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                     isCompleted 
                                         ? 'bg-gray-50/60 dark:bg-gray-900/60' 
                                         : isSelected 
-                                            ? 'bg-[#fdf5f2] dark:bg-[#2d221f] border-l-4 border-l-[#ef754e]' 
+                                            ? 'bg-accent-soft dark:bg-[#2d221f] border-l-4 border-l-accent' 
                                             : 'hover:bg-[#fafaf8] dark:hover:bg-gray-800/30'
                                 }`}
                                 style={{ height }}
                             >
-                                <div className={`w-1 h-full transition-colors ${isSelected ? 'bg-[#ef754e]' : isCompleted ? 'bg-emerald-400' : 'bg-transparent'}`}></div>
+                                <div className={`w-1 h-full transition-colors ${isSelected ? 'bg-accent' : isCompleted ? 'bg-emerald-400' : 'bg-transparent'}`}></div>
                                 <div className="flex items-center w-full" style={{ paddingLeft: task.groupId ? '1.5rem' : '0.5rem' }}>
                                     {item.hasAssignments ? (
                                         <div className="px-1 text-gray-400 hover:text-gray-600 cursor-pointer" onClick={(e) => { e.stopPropagation(); onToggleTaskExpansion(task.id); }}>
@@ -185,7 +185,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                    <div className={`w-1.5 h-8 relative rounded-full mr-3 flex-shrink-0 ${isCompleted ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gray-100 dark:bg-gray-800'}`}>
                                         <div 
                                             className="absolute bottom-0 left-0 right-0 transition-all duration-300 rounded-full" 
-                                            style={{ height: `${task.completion}%`, backgroundColor: isCompleted ? '#10b981' : '#ef754e' }}
+                                            style={{ height: `${task.completion}%`, backgroundColor: isCompleted ? '#10b981' : 'rgb(var(--color-primary-500))' }}
                                         />
                                    </div>
                                    <div className="flex-1 flex flex-col justify-center px-1 h-full w-0 py-1.5 pr-3">
@@ -240,7 +240,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                 onDragLeave={(e) => { e.preventDefault(); onSetDragOverGroupId(null); }}
                 className={`flex-1 flex items-center justify-center border border-dashed rounded-xl transition-all duration-200 ${
                     dragOverGroupId === 'ungrouped'
-                        ? 'bg-[#fdf2ee] border-[#ef754e] dark:bg-[#2d221f]'
+                        ? 'bg-accent-soft border-accent dark:bg-[#2d221f]'
                         : 'border-[#e6e6e2] dark:border-gray-800 bg-[#fafaf8]/50 dark:bg-gray-800/30'
                 }`}
             >

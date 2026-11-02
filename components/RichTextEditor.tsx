@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { BoldIcon, ItalicIcon, UnderlineIcon, ListOrderedIcon, ListUnorderedIcon, StrikethroughIcon, QuoteIcon, Heading2Icon } from './icons/TextFormatIcons';
 import Tooltip from './Tooltip';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
+import { sanitizeHtml } from '../services/sanitizeHtml';
 import { TextFormatVertical } from './icons/TextFormatVertical';
 
 interface RichTextEditorProps {
@@ -21,7 +22,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange }) => {
     useEffect(() => {
         const editor = editorRef.current;
         if (editor && value !== editor.innerHTML) {
-            editor.innerHTML = value;
+            editor.innerHTML = sanitizeHtml(value);
         }
     }, [value]);
 

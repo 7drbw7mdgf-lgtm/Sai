@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useMemo, useCallback, useEffect, useLayoutEffect } from 'react';
+import BenchlineLogo from './BenchlineLogo';
 import { ProjectData, Task, Group, Assignment } from '../types';
 import TaskSidebar from './TaskSidebar';
 import Timeline from './Timeline';
@@ -31,12 +32,6 @@ interface GanttChartProps {
 const DEFAULT_SIDEBAR_WIDTH = 400;
 const MIN_SIDEBAR_WIDTH = 240;
 const MAX_SIDEBAR_WIDTH = 750;
-
-const SparkIcon = ({ className = "w-4 h-4 text-[#ef754e]" }: { className?: string }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2a1.25 1.25 0 0 1 1.25 1.25v5.474l3.87-3.87a1.25 1.25 0 1 1 1.768 1.768l-3.87 3.87h5.474a1.25 1.25 0 1 1 0 2.5h-5.474l3.87 3.87a1.25 1.25 0 1 1-1.768 1.768l-3.87-3.87v5.474a1.25 1.25 0 1 1-2.5 0v-5.474l-3.87 3.87a1.25 1.25 0 0 1-1.768-1.768l3.87-3.87H3.25a1.25 1.25 0 1 1 0-2.5h5.474l-3.87-3.87a1.25 1.25 0 0 1 1.768-1.768l3.87 3.87V3.25A1.25 1.25 0 0 1 12 2Z" />
-    </svg>
-);
 
 const topologicalSortTasks = (tasks: Task[]): Task[] => {
     const sorted: Task[] = [];
@@ -540,16 +535,16 @@ const GanttChart: React.FC<GanttChartProps> = ({
                 onDoubleClick={handleResetSidebarWidth}
                 className={`relative group/resizer w-2 flex-shrink-0 cursor-col-resize z-30 transition-colors select-none ${
                     isResizingSidebar 
-                        ? 'bg-[#ef754e]/20' 
-                        : 'hover:bg-[#ef754e]/10 bg-transparent'
+                        ? 'bg-accent/20' 
+                        : 'hover:bg-accent/10 bg-transparent'
                 }`}
             >
                 {/* Vertical separator line */}
                 <div 
                     className={`absolute top-0 bottom-0 left-1/2 -translate-x-1/2 transition-all ${
                         isResizingSidebar 
-                            ? 'bg-[#ef754e] w-0.5' 
-                            : 'bg-[#e6e6e2] dark:bg-gray-800 w-px group-hover/resizer:bg-[#ef754e] group-hover/resizer:w-0.5'
+                            ? 'bg-accent w-0.5' 
+                            : 'bg-[#e6e6e2] dark:bg-gray-800 w-px group-hover/resizer:bg-accent group-hover/resizer:w-0.5'
                     }`} 
                 />
                 
@@ -557,8 +552,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
                 <div 
                     className={`absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-3.5 h-8 rounded-full bg-white dark:bg-gray-800 border shadow-xs flex items-center justify-center transition-all ${
                         isResizingSidebar 
-                            ? 'border-[#ef754e] text-[#ef754e] scale-110 shadow-sm ring-2 ring-[#ef754e]/20' 
-                            : 'border-[#e6e6e2] dark:border-gray-700 text-gray-400 group-hover/resizer:border-[#ef754e] group-hover/resizer:text-[#ef754e]'
+                            ? 'border-accent text-accent scale-110 shadow-sm ring-2 ring-accent/20' 
+                            : 'border-[#e6e6e2] dark:border-gray-700 text-gray-400 group-hover/resizer:border-accent group-hover/resizer:text-accent'
                     }`}
                 >
                     <svg className="w-2 h-2" viewBox="0 0 24 24" fill="currentColor">
@@ -575,7 +570,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             <div className="flex-1 flex flex-col min-w-0 relative">
                  <div className="flex-shrink-0 flex items-center justify-between border-b border-[#e6e6e2] dark:border-gray-800 px-4 h-[60px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
                     <div className="flex items-center gap-3">
-                        <SparkIcon className="w-4 h-4 text-[#ef754e]" />
+                        <BenchlineLogo className="w-5 h-5" />
                         <h2 className="text-sm font-bold text-[#292c31] dark:text-gray-100 font-['Manrope']">Roadmap Timeline</h2>
                         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#f4f5f0] dark:bg-gray-800 text-[11px] font-bold text-[#626e56] dark:text-[#a0ae95] border border-[#e6e6e2] dark:border-gray-700">
                             <span>{tasks.filter(t => t.completion === 100).length} of {tasks.length} done</span>
@@ -587,7 +582,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                             className="hidden md:flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-xl border border-[#e6e6e2] dark:border-gray-700 hover:bg-[#f0efeb] dark:hover:bg-gray-800 text-[#5c6652] dark:text-gray-300 transition-colors"
                             title="Scroll to Today"
                         >
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#ef754e]"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
                             <span>Today</span>
                         </button>
                         <ViewControls 
@@ -598,7 +593,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                         />
                         <button
                             onClick={onRequestAddTask}
-                            className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-[#ef754e] hover:bg-[#d85f3b] text-white text-xs font-bold transition-all shadow-2xs active:scale-98"
+                            className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-accent hover:bg-accent-hover text-white text-xs font-bold transition-all shadow-2xs active:scale-98"
                         >
                             <span>＋</span>
                             <span className="hidden sm:inline">Add Task</span>
@@ -606,7 +601,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                     </div>
                 </div>
                 {dependencyLink && (
-                    <div className="absolute left-1/2 top-[68px] z-40 -translate-x-1/2 flex items-center gap-3 rounded-full border border-[#ef754e]/30 bg-[#fdf2ee] pl-4 pr-1.5 py-1.5 text-xs font-bold text-[#ef754e] shadow-lg whitespace-nowrap">
+                    <div className="absolute left-1/2 top-[68px] z-40 -translate-x-1/2 flex items-center gap-3 rounded-full border border-accent/30 bg-accent-soft pl-4 pr-1.5 py-1.5 text-xs font-bold text-accent shadow-lg whitespace-nowrap">
                         <span>
                             {dependencyLink.type === 'prerequisite'
                                 ? `Click a task that should follow “${tasksById.get(dependencyLink.fromTaskId)?.name ?? 'this task'}”`

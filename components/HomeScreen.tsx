@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
+import BenchlineLogo from './BenchlineLogo';
 import { ProjectData, WidgetLayout, WidgetType, View, Priority, Task } from '../types';
 import WidgetContainer from './WidgetContainer';
 import AddWidgetModal from './AddWidgetModal';
@@ -56,12 +57,6 @@ const WIDGET_DEFAULT_SIZE: Partial<Record<WidgetType, { w: number; h: number }>>
 export type ResizeDirection = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
 export type AsanaStatus = 'on_track' | 'at_risk' | 'off_track' | 'on_hold';
-
-const SparkIcon = ({ className = "w-5 h-5 text-[#ef754e]" }: { className?: string }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2a1.25 1.25 0 0 1 1.25 1.25v5.474l3.87-3.87a1.25 1.25 0 1 1 1.768 1.768l-3.87 3.87h5.474a1.25 1.25 0 1 1 0 2.5h-5.474l3.87 3.87a1.25 1.25 0 1 1-1.768 1.768l-3.87-3.87v5.474a1.25 1.25 0 1 1-2.5 0v-5.474l-3.87 3.87a1.25 1.25 0 0 1-1.768-1.768l3.87-3.87H3.25a1.25 1.25 0 1 1 0-2.5h5.474l-3.87-3.87a1.25 1.25 0 0 1 1.768-1.768l3.87 3.87V3.25A1.25 1.25 0 0 1 12 2Z" />
-    </svg>
-);
 
 interface HomeScreenProps {
     projectData: ProjectData;
@@ -417,9 +412,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4">
                         {/* Project Title & Icon */}
                         <div className="flex items-center gap-3.5">
-                            <div className="w-10 h-10 rounded-xl bg-[#ef754e] flex items-center justify-center text-white shadow-xs shrink-0 select-none">
-                                <SparkIcon className="w-5 h-5 text-white" />
-                            </div>
+                            <BenchlineLogo className="w-10 h-10 select-none" />
                             <div>
                                 <div className="flex items-center gap-2 mb-0.5">
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#7a8472] dark:text-[#9ea996]">
@@ -472,7 +465,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                 <>
                                     <button 
                                         onClick={() => setIsAddWidgetModalOpen(true)} 
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#fdf2ee] text-[#ef754e] hover:bg-[#fce5dc] transition-colors"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent-soft text-accent hover:bg-[#fce5dc] transition-colors"
                                     >
                                         <PlusIcon className="w-4 h-4"/> Add Widget
                                     </button>
@@ -484,7 +477,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                     </button>
                                     <button 
                                         onClick={handleSave} 
-                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#ef754e] text-white hover:bg-[#d85f3b] shadow-xs transition-colors"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-accent text-white hover:bg-accent-hover shadow-xs transition-colors"
                                     >
                                         Save Layout
                                     </button>
@@ -495,12 +488,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                         onClick={() => setIsStatusModalOpen(true)}
                                         className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-[#e6e6e2] dark:border-gray-700 hover:bg-[#f0efeb] dark:hover:bg-gray-800 text-[#292c31] dark:text-gray-300 transition-all shadow-2xs"
                                     >
-                                        <SparklesIcon className="w-3.5 h-3.5 text-[#ef754e]" />
+                                        <SparklesIcon className="w-3.5 h-3.5 text-accent" />
                                         <span>Set status update</span>
                                     </button>
                                     <button
                                         onClick={onRequestAddTask}
-                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#ef754e] hover:bg-[#d85f3b] text-white transition-all shadow-xs active:scale-98"
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-accent hover:bg-accent-hover text-white transition-all shadow-xs active:scale-98"
                                     >
                                         <PlusIcon className="w-3.5 h-3.5" />
                                         <span>Add task</span>
@@ -518,49 +511,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         </div>
                     </div>
 
-                    {/* Sparkboard Project View Tab Bar */}
-                    <div className="flex items-center gap-1 border-t border-[#e6e6e2] dark:border-gray-800 -mb-px overflow-x-auto no-x-scrollbar">
-                        <button 
-                            className="flex items-center gap-2 py-3 px-3.5 text-sm font-bold border-b-2 border-[#ef754e] text-[#292c31] dark:text-white"
-                        >
-                            <svg className="w-4 h-4 text-[#ef754e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
-                            <span>Overview</span>
-                        </button>
-                        <button 
-                            onClick={() => onViewChange && onViewChange(View.KANBAN)}
-                            className="flex items-center gap-2 py-3 px-3.5 text-sm font-semibold border-b-2 border-transparent text-[#5c6652] hover:text-[#ef754e] dark:text-gray-400 dark:hover:text-[#ef754e] transition-colors"
-                        >
-                            <svg className="w-4 h-4 text-[#ef754e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="3.5" y="4.5" width="5" height="15" rx="1.5" />
-                                <rect x="10.5" y="4.5" width="5" height="10" rx="1.5" />
-                                <rect x="17.5" y="4.5" width="5" height="7" rx="1.5" />
-                            </svg>
-                            <span>Kanban Board</span>
-                        </button>
-                        <button 
-                            onClick={() => onViewChange && onViewChange(View.TASKS)}
-                            className="flex items-center gap-2 py-3 px-3.5 text-sm font-medium border-b-2 border-transparent text-[#5c6652] hover:text-[#292c31] dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                        >
-                            <TasksIcon className="w-4 h-4" />
-                            <span>List</span>
-                        </button>
-                        <button 
-                            onClick={() => onViewChange && onViewChange(View.GANTT)}
-                            className="flex items-center gap-2 py-3 px-3.5 text-sm font-medium border-b-2 border-transparent text-[#5c6652] hover:text-[#292c31] dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                        >
-                            <GanttChartIcon className="w-4 h-4" />
-                            <span>Gantt</span>
-                        </button>
-                        <button 
-                            onClick={() => onViewChange && onViewChange(View.CALENDAR)}
-                            className="flex items-center gap-2 py-3 px-3.5 text-sm font-medium border-b-2 border-transparent text-[#5c6652] hover:text-[#292c31] dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                        >
-                            <CalendarDaysIcon className="w-4 h-4" />
-                            <span>Calendar</span>
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -600,15 +550,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </div>
 
                     {/* Overdue */}
-                    <div className="bg-white dark:bg-[#252628] rounded-2xl border border-[#e6e6e2] dark:border-gray-800 border-l-4 border-l-[#ef754e] p-4 shadow-2xs hover:shadow-xs transition-all">
+                    <div className="bg-white dark:bg-[#252628] rounded-2xl border border-[#e6e6e2] dark:border-gray-800 border-l-4 border-l-accent p-4 shadow-2xs hover:shadow-xs transition-all">
                         <div className="flex items-center justify-between">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-[#7a8472] dark:text-gray-400">Overdue</span>
-                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${stats.overdueTasks > 0 ? 'bg-[#fdf2ee] text-[#ef754e] dark:bg-orange-950/40' : 'bg-gray-100 text-gray-500 dark:bg-gray-800'}`}>
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${stats.overdueTasks > 0 ? 'bg-accent-soft text-accent dark:bg-orange-950/40' : 'bg-gray-100 text-gray-500 dark:bg-gray-800'}`}>
                                 <LightningIcon className="w-4 h-4" />
                             </div>
                         </div>
                         <div className="mt-3 flex items-baseline gap-2">
-                            <span className={`text-2xl font-black font-['Manrope'] ${stats.overdueTasks > 0 ? 'text-[#ef754e]' : 'text-[#292c31] dark:text-white'}`}>
+                            <span className={`text-2xl font-black font-['Manrope'] ${stats.overdueTasks > 0 ? 'text-accent' : 'text-[#292c31] dark:text-white'}`}>
                                 {stats.overdueTasks}
                             </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -1023,13 +973,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                 <a 
                                     href="#kanban" 
                                     onClick={e => { e.preventDefault(); if (onViewChange) onViewChange(View.KANBAN); }}
-                                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[#fdf2ee] dark:hover:bg-gray-800 text-[#292c31] dark:text-gray-300 transition-colors font-medium"
+                                    className="flex items-center justify-between p-2 rounded-lg hover:bg-accent-soft dark:hover:bg-gray-800 text-[#292c31] dark:text-gray-300 transition-colors font-medium"
                                 >
                                     <span className="flex items-center gap-2">
-                                        <SparkIcon className="w-4 h-4 text-[#ef754e]" />
+                                        <BenchlineLogo className="w-4 h-4" />
                                         <span>Kanban Sprint Board</span>
                                     </span>
-                                    <span className="text-[#ef754e] font-bold">→</span>
+                                    <span className="text-accent font-bold">→</span>
                                 </a>
                                 <a 
                                     href="#tasks" 
@@ -1077,7 +1027,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                             </div>
                             <button
                                 onClick={() => setIsAddWidgetModalOpen(true)}
-                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+                                className="px-3 py-1.5 bg-accent hover:bg-accent-hover text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
                             >
                                 <PlusIcon className="w-3.5 h-3.5" />
                                 Add Widget

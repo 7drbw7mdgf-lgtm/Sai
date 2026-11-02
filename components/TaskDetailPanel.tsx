@@ -3,10 +3,10 @@ import { ProjectData, Task, Person, Priority, Group, CustomField, Assignment } f
 import { PRIORITY_COLORS, PRIORITY_ORDER, TASK_COLORS } from '../constants';
 import Tooltip from './Tooltip';
 import DatePicker from './DatePicker';
+import AssignmentDateFields from './AssignmentDateFields';
 import { TrashIcon } from './icons/TrashIcon';
 import { XCircleIcon } from './icons/XCircleIcon';
 import { CheckCircleIcon, CheckCircleIconSolid } from './icons/CheckCircleIcon';
-import { UserCircleIcon } from './icons/UserCircleIcon';
 import { CalendarDaysIcon } from './icons/CalendarDaysIcon';
 import { FlagIcon } from './icons/FlagIcon';
 import { FolderIcon } from './icons/FolderIcon';
@@ -97,7 +97,6 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
     const task = useMemo(() => projectData.tasks.find(t => t.id === taskId), [taskId, projectData.tasks]);
     const { people, groups, tasks, meetings, assignments = [], customFields = [], notes: allNotes } = projectData;
 
-    const [isAssigneeEditorOpen, setIsAssigneeEditorOpen] = useState(false);
     const [isStartDatePickerOpen, setIsStartDatePickerOpen] = useState(false);
     const [isEndDatePickerOpen, setIsEndDatePickerOpen] = useState(false);
     const [isPriorityEditorOpen, setIsPriorityEditorOpen] = useState(false);
@@ -106,12 +105,10 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
     const [isEditingNotes, setIsEditingNotes] = useState(false);
 
 
-    const assigneeEditorRef = useRef(null);
     const priorityEditorRef = useRef(null);
     const groupEditorRef = useRef(null);
     const colorPickerRef = useRef(null);
 
-    useOnClickOutside(assigneeEditorRef, () => setIsAssigneeEditorOpen(false));
     useOnClickOutside(priorityEditorRef, () => setIsPriorityEditorOpen(false));
     useOnClickOutside(groupEditorRef, () => setIsGroupEditorOpen(false));
     useOnClickOutside(colorPickerRef, () => setIsColorPickerOpen(false));
@@ -220,8 +217,6 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
     const postrequisites = tasks.filter(t => t.dependencies?.includes(task.id));
     const taskAssignments = assignments.filter(j => j.taskId === task.id).sort((a,b) => a.startDate.getTime() - b.startDate.getTime());
 
-    const assignedPeople = people.filter(p => task.assignedTo.includes(p.id));
-    
     const toggleNewAssignmentAssignee = (personId: string) => {
         setNewAssignmentAssignees(prev =>
             prev.includes(personId) ? prev.filter(id => id !== personId) : [...prev, personId]
@@ -271,37 +266,6 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
                 />
 
                 <div className="space-y-1">
-                    <MetadataRow icon={<UserCircleIcon className="w-5 h-5"/>} label="Assignees">
-                        <div className="relative" ref={assigneeEditorRef}>
-                            <button onClick={() => setIsAssigneeEditorOpen(o => !o)} className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 p-1 -m-1 rounded-md">
-                                {assignedPeople.length > 0 ? (
-                                    <div className="flex items-center -space-x-2">
-                                        {assignedPeople.slice(0, 4).map(p => (
-                                            <img key={p.id} src={p.avatarUrl} alt={p.name} className="w-7 h-7 rounded-full border-2 border-gray-50 dark:border-gray-800"/>
-                                        ))}
-                                        {assignedPeople.length > 4 && <div className="w-7 h-7 text-xs rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center border-2 border-gray-50 dark:border-gray-800">+{assignedPeople.length - 4}</div>}
-                                    </div>
-                                ) : (
-                                    <span className="text-gray-400 dark:text-gray-500 font-medium">Unassigned</span>
-                                )}
-                            </button>
-                            {isAssigneeEditorOpen && (
-                                <div className="absolute top-full mt-1 w-64 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg z-50">
-                                    <AssigneeEditor 
-                                        people={people} 
-                                        assignedTo={task.assignedTo} 
-                                        onToggle={personId => {
-                                            const newAssigned = task.assignedTo.includes(personId)
-                                                ? task.assignedTo.filter(id => id !== personId)
-                                                : [...task.assignedTo, personId];
-                                            updateTask({ assignedTo: newAssigned });
-                                        }} 
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </MetadataRow>
-                    
                      <MetadataRow icon={<CalendarDaysIcon className="w-5 h-5"/>} label="Start date">
                          <div className="relative">
                             <button onClick={() => setIsStartDatePickerOpen(o => !o)} className="hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 -m-1 rounded-md">
@@ -420,10 +384,14 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
                         ))}
                         <div className="pt-2 border-t border-gray-200/80 dark:border-gray-700/80 space-y-2">
                             <input type="text" value={newAssignmentName} onChange={e => setNewAssignmentName(e.target.value)} placeholder="Add a new assignment..." className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm"/>
-                            <div className="grid grid-cols-2 gap-2">
-                                <DatePicker selectedDate={newAssignmentStartDate} onChange={setNewAssignmentStartDate} minDate={task.startDate} maxDate={task.endDate} onClose={() => {}} />
-                                <DatePicker selectedDate={newAssignmentEndDate} onChange={setNewAssignmentEndDate} minDate={newAssignmentStartDate} maxDate={task.endDate} onClose={() => {}} />
-                            </div>
+                            <AssignmentDateFields
+                                startDate={newAssignmentStartDate}
+                                endDate={newAssignmentEndDate}
+                                onStartChange={setNewAssignmentStartDate}
+                                onEndChange={setNewAssignmentEndDate}
+                                minDate={task.startDate}
+                                maxDate={task.endDate}
+                            />
                             <div className="grid grid-cols-2 gap-2">
                                 <input type="time" value={newAssignmentStartTime} onChange={e => setNewAssignmentStartTime(e.target.value)} className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm"/>
                                 <input type="time" value={newAssignmentEndTime} onChange={e => setNewAssignmentEndTime(e.target.value)} className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm"/>
@@ -440,7 +408,7 @@ const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ taskId, projectData, 
                                         </div>
                                     }
                                 </div>
-                                <button onClick={handleAddAssignment} disabled={!newAssignmentName.trim()} className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300">
+                                <button onClick={handleAddAssignment} disabled={!newAssignmentName.trim()} className="p-2 bg-accent text-white rounded-md hover:bg-accent-hover disabled:bg-gray-300">
                                     <PlusIcon className="w-4 h-4" />
                                 </button>
                             </div>

@@ -5,6 +5,7 @@ import React, { useMemo, useState, useRef } from 'react';
 import { ProjectData, Meeting, Person, Job } from '../types';
 import Tooltip from './Tooltip';
 import DatePicker from './DatePicker';
+import AssignmentDateFields from './AssignmentDateFields';
 import { TrashIcon } from './icons/TrashIcon';
 import { XCircleIcon } from './icons/XCircleIcon';
 import PillAccordion from './PillAccordion';
@@ -87,20 +88,26 @@ const AttendeeEditor: React.FC<{
 
 const DatePickerButton: React.FC<{ date: Date, onChange: (date: Date) => void }> = ({ date, onChange }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef(null);
+    useOnClickOutside(containerRef, () => setIsOpen(false));
     return (
-        <div className="relative w-full">
-            <button onClick={() => setIsOpen(true)} className="w-full text-left bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
+        <div className="w-full space-y-2" ref={containerRef}>
+            <button onClick={() => setIsOpen(o => !o)} aria-expanded={isOpen} className="w-full text-left bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
                 {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </button>
+            {/* In the page flow, because the accordion around this clips anything floating out of it. */}
             {isOpen && (
-                <DatePicker 
-                    selectedDate={date}
-                    onChange={(newDate) => {
-                        onChange(newDate);
-                        setIsOpen(false);
-                    }}
-                    onClose={() => setIsOpen(false)}
-                />
+                <div className="flex justify-center rounded-md border border-gray-200 bg-white p-3 dark:border-gray-600">
+                    <DatePicker
+                        isInline
+                        selectedDate={date}
+                        onChange={(newDate) => {
+                            onChange(newDate);
+                            setIsOpen(false);
+                        }}
+                        onClose={() => setIsOpen(false)}
+                    />
+                </div>
             )}
         </div>
     );
@@ -232,8 +239,8 @@ const MeetingDetailPanel: React.FC<MeetingDetailPanelProps> = ({ meetingId, proj
                 
                 <PillAccordion title={<><CalendarDaysIcon className="w-5 h-5 text-gray-500"/><span className="font-semibold">Date & Time</span></>} defaultOpen>
                     <div className="p-1 space-y-2">
-                         <div className="flex items-center gap-2">
-                            <span className="w-12 text-sm text-gray-500">Date</span>
+                         <div className="flex items-start gap-2">
+                            <span className="w-12 flex-shrink-0 pt-1.5 text-sm text-gray-500">Date</span>
                             <DatePickerButton date={meeting.date} onChange={handleDateChange} />
                         </div>
                         <div className="flex items-center gap-2">
@@ -326,10 +333,14 @@ const MeetingDetailPanel: React.FC<MeetingDetailPanelProps> = ({ meetingId, proj
                         ))}
                         <div className="pt-2 border-t border-gray-200/80 space-y-2">
                             <input type="text" value={newJobName} onChange={e => setNewJobName(e.target.value)} placeholder="Add a new assignment..." className="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-sm"/>
-                             <div className="grid grid-cols-2 gap-2">
-                                <DatePicker selectedDate={newJobStartDate} onChange={setNewJobStartDate} minDate={projectData.projectStartDate} maxDate={projectData.projectEndDate} onClose={() => {}} />
-                                <DatePicker selectedDate={newJobEndDate} onChange={setNewJobEndDate} minDate={newJobStartDate} maxDate={projectData.projectEndDate} onClose={() => {}} />
-                            </div>
+                            <AssignmentDateFields
+                                startDate={newJobStartDate}
+                                endDate={newJobEndDate}
+                                onStartChange={setNewJobStartDate}
+                                onEndChange={setNewJobEndDate}
+                                minDate={projectData.projectStartDate}
+                                maxDate={projectData.projectEndDate}
+                            />
                             <div className="grid grid-cols-2 gap-2">
                                 <input type="time" value={newJobStartTime} onChange={e => setNewJobStartTime(e.target.value)} className="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-sm"/>
                                 <input type="time" value={newJobEndTime} onChange={e => setNewJobEndTime(e.target.value)} className="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-sm"/>
@@ -346,7 +357,7 @@ const MeetingDetailPanel: React.FC<MeetingDetailPanelProps> = ({ meetingId, proj
                                         </div>
                                     }
                                 </div>
-                                <button onClick={handleAddJob} disabled={!newJobName.trim()} className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300">
+                                <button onClick={handleAddJob} disabled={!newJobName.trim()} className="p-2 bg-accent text-white rounded-md hover:bg-accent-hover disabled:bg-gray-300">
                                     <PlusIcon className="w-4 h-4" />
                                 </button>
                             </div>

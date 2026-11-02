@@ -1,12 +1,11 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { Task, Person, Priority, Group, CustomField } from '../types';
+import { Task, Priority, Group } from '../types';
 import { TASK_COLORS, PRIORITY_COLORS, PRIORITY_ORDER } from '../constants';
 import DatePicker from './DatePicker';
 import { CalendarDaysIcon } from './icons/CalendarDaysIcon';
 import { FolderIcon } from './icons/FolderIcon';
-import { UserCircleIcon } from './icons/UserCircleIcon';
 import { FlagIcon } from './icons/FlagIcon';
 import { PaintBrushIcon } from './icons/PaintBrushIcon';
 import Tooltip from './Tooltip';
@@ -53,39 +52,22 @@ const PrioritySelector: React.FC<{ selected?: Priority; onSelect: (priority?: Pr
     </div>
 );
 
-const AssigneeEditor: React.FC<{people: Person[], assignedTo: string[], onToggle: (personId: string) => void}> = ({ people, assignedTo, onToggle }) => (
-    <div className="w-full max-h-64 overflow-y-auto p-1">
-        {people.map(person => (
-            <div key={person.id} onClick={() => onToggle(person.id)} className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 cursor-pointer">
-                <input type="checkbox" checked={assignedTo.includes(person.id)} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
-                <img src={person.avatarUrl} alt={person.name} className="w-7 h-7 rounded-full" />
-                <span className="text-sm font-medium text-gray-700">{person.name}</span>
-            </div>
-        ))}
-        {people.length === 0 && <span className="text-xs text-gray-400 p-2">No people in this project.</span>}
-    </div>
-);
-
-
 interface AddTaskPanelProps {
     onClose: () => void;
     onSave: (newTask: Task) => void;
-    people: Person[];
     groups: Group[];
-    customFields: CustomField[];
     initialData?: Partial<Task>;
+    initialCompletion?: number;
 }
 
-const AddTaskPanel: React.FC<AddTaskPanelProps> = ({ onClose, onSave, people, groups, customFields, initialData }) => {
+const AddTaskPanel: React.FC<AddTaskPanelProps> = ({ onClose, onSave, groups, initialData, initialCompletion = 0 }) => {
     const [name, setName] = useState('');
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
-    const [assignedTo, setAssignedTo] = useState<string[]>([]);
     const [groupId, setGroupId] = useState<string | undefined>(undefined);
     const [color, setColor] = useState(TASK_COLORS[0]);
     const [priority, setPriority] = useState<Priority | undefined>(Priority.Medium);
     const [tags, setTags] = useState<string[]>([]);
-    const [customFieldValues, setCustomFieldValues] = useState<{ [fieldId: string]: any }>({});
     const [openEditor, setOpenEditor] = useState<string | null>(null);
     
     useEffect(() => {
@@ -93,12 +75,10 @@ const AddTaskPanel: React.FC<AddTaskPanelProps> = ({ onClose, onSave, people, gr
         const start = initialData?.startDate || new Date();
         setStartDate(start);
         setEndDate(initialData?.endDate || start);
-        setAssignedTo(initialData?.assignedTo || []);
         setGroupId(initialData?.groupId || undefined);
         setColor(initialData?.color || TASK_COLORS[Math.floor(Math.random() * TASK_COLORS.length)]);
         setPriority(initialData?.priority || Priority.Medium);
         setTags(initialData?.tags || []);
-        setCustomFieldValues(initialData?.customFieldValues || {});
     }, [initialData]);
     
     useEffect(() => {
@@ -123,22 +103,12 @@ const AddTaskPanel: React.FC<AddTaskPanelProps> = ({ onClose, onSave, people, gr
     
     const handleSave = () => {
         if (!name) { alert('Please fill in a task name.'); return; }
-        onSave({ id: `t-${Date.now()}`, name, groupId, startDate, endDate, assignedTo, color, completion: 0, priority, notes: '', tags, customFieldValues });
+        onSave({ id: `t-${Date.now()}`, name, groupId, startDate, endDate, assignedTo: initialData?.assignedTo || [], color, completion: initialCompletion, priority, notes: '', tags, customFieldValues: initialData?.customFieldValues || {} });
     };
     
-    const togglePerson = (personId: string) => {
-        setAssignedTo(prev => prev.includes(personId) ? prev.filter(id => id !== personId) : [...prev, personId]);
-    };
-
     const handleToggleEditor = (editorName: string) => {
         setOpenEditor(prev => prev === editorName ? null : editorName);
     };
-
-    const handleCustomFieldChange = (fieldId: string, value: any) => {
-        setCustomFieldValues(prev => ({ ...prev, [fieldId]: value }));
-    };
-
-    const assignedPeople = people.filter(p => assignedTo.includes(p.id));
 
     return (
         <div className="h-full bg-gray-50 border-l border-gray-200 flex flex-col w-full animate-slide-in-right">
@@ -155,22 +125,6 @@ const AddTaskPanel: React.FC<AddTaskPanelProps> = ({ onClose, onSave, people, gr
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Design homepage" className="text-2xl font-bold text-gray-800 bg-transparent focus:outline-none w-full border-b-2 border-transparent focus:border-blue-500 -ml-1 p-1 transition-colors"/>
 
                 <div className="space-y-1">
-                    <div>
-                        <MetadataRow icon={<UserCircleIcon className="w-5 h-5"/>} label="Assignees" onClick={() => handleToggleEditor('assignee')} isOpen={openEditor === 'assignee'}>
-                            <div className="flex items-center gap-2">
-                                {assignedPeople.length > 0 ? (
-                                    <div className="flex items-center -space-x-2">
-                                        {assignedPeople.slice(0, 4).map(p => <img key={p.id} src={p.avatarUrl} alt={p.name} className="w-7 h-7 rounded-full border-2 border-gray-50"/>)}
-                                        {assignedPeople.length > 4 && <div className="w-7 h-7 text-xs rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-50">+{assignedPeople.length - 4}</div>}
-                                    </div>
-                                ) : <span className="text-gray-400 font-medium">Unassigned</span>}
-                            </div>
-                        </MetadataRow>
-                        <InlineEditorWrapper isOpen={openEditor === 'assignee'}>
-                            <AssigneeEditor people={people} assignedTo={assignedTo} onToggle={togglePerson} />
-                        </InlineEditorWrapper>
-                    </div>
-                    
                     <div>
                         <MetadataRow icon={<CalendarDaysIcon className="w-5 h-5"/>} label="Start date" onClick={() => handleToggleEditor('startDate')} isOpen={openEditor === 'startDate'}>
                             {startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
@@ -227,34 +181,12 @@ const AddTaskPanel: React.FC<AddTaskPanelProps> = ({ onClose, onSave, people, gr
                             <ColorSwatchPicker selectedColor={color} onSelectColor={setColor} />
                         </InlineEditorWrapper>
                     </div>
-
-                    {customFields.length > 0 && <div className="border-t border-gray-200 pt-3 mt-3 -mx-3"/>}
-                     {customFields.map(field => (
-                        <div key={field.id} className="w-full flex items-center py-1.5 px-3 -mx-3">
-                             <div className="w-32 flex-shrink-0 flex items-center gap-3 text-sm font-medium text-gray-500">
-                                <span>{field.name}</span>
-                            </div>
-                            <div className="flex-1">
-                                {field.type === 'Text' && <input type="text" value={customFieldValues[field.id] || ''} onChange={(e) => handleCustomFieldChange(field.id, e.target.value)} className="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-sm" />}
-                                {field.type === 'Number' && <input type="number" value={customFieldValues[field.id] || ''} onChange={(e) => handleCustomFieldChange(field.id, e.target.valueAsNumber)} className="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-sm" />}
-                                {field.type === 'Select' && (
-                                    <select value={customFieldValues[field.id] || ''} onChange={(e) => handleCustomFieldChange(field.id, e.target.value)} className="w-full bg-white border border-gray-300 rounded-md px-2 py-1 text-sm">
-                                        <option value="">Select...</option>
-                                        {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                )}
-                                {field.type === 'Date' && (
-                                    <DatePicker isInline selectedDate={customFieldValues[field.id] ? new Date(customFieldValues[field.id]) : new Date()} onChange={(date) => handleCustomFieldChange(field.id, date.toISOString().split('T')[0])} onClose={() => {}} />
-                                )}
-                            </div>
-                        </div>
-                    ))}
                 </div>
             </div>
 
             <footer className="flex-shrink-0 p-4 border-t border-gray-200 flex justify-end gap-3 bg-white/50">
                 <button onClick={onClose} className="px-5 py-2 rounded-lg bg-white hover:bg-gray-100 transition-colors font-semibold text-gray-700 border border-gray-200">Cancel</button>
-                <button onClick={handleSave} className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition-colors font-semibold text-white shadow-sm">Add Task</button>
+                <button onClick={handleSave} className="px-5 py-2 rounded-lg bg-accent hover:bg-accent-hover transition-colors font-semibold text-white shadow-sm">Add Task</button>
             </footer>
         </div>
     );

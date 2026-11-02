@@ -30,7 +30,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({ viewMode, onViewModeChange,
                     onClick={() => onViewModeChange('day')} 
                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                         viewMode === 'day' 
-                            ? 'bg-[#ef754e] text-white shadow-2xs font-bold' 
+                            ? 'bg-accent text-white shadow-2xs font-bold' 
                             : 'text-[#5c6652] dark:text-gray-400 hover:text-[#292c31] dark:hover:text-white'
                     }`}
                 >
@@ -40,7 +40,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({ viewMode, onViewModeChange,
                     onClick={() => onViewModeChange('week')} 
                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                         viewMode === 'week' 
-                            ? 'bg-[#ef754e] text-white shadow-2xs font-bold' 
+                            ? 'bg-accent text-white shadow-2xs font-bold' 
                             : 'text-[#5c6652] dark:text-gray-400 hover:text-[#292c31] dark:hover:text-white'
                     }`}
                 >
@@ -50,7 +50,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({ viewMode, onViewModeChange,
                     onClick={() => onViewModeChange('month')} 
                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                         viewMode === 'month' 
-                            ? 'bg-[#ef754e] text-white shadow-2xs font-bold' 
+                            ? 'bg-accent text-white shadow-2xs font-bold' 
                             : 'text-[#5c6652] dark:text-gray-400 hover:text-[#292c31] dark:hover:text-white'
                     }`}
                 >
@@ -75,7 +75,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({ viewMode, onViewModeChange,
                     max={MAX_ZOOM}
                     value={zoom}
                     onChange={handleZoomChange}
-                    className="w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#ef754e]"
+                    className="w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent"
                 />
                 <button 
                     onClick={() => onZoomChange(Math.min(MAX_ZOOM, zoom + 5))} 

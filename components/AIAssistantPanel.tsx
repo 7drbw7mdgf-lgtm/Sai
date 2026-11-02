@@ -87,7 +87,7 @@ const CreateTaskWidget: React.FC<{ args: any, onConfirm: (task: Task) => void, o
             <input type="text" value={assigneeName} onChange={e => setAssigneeName(e.target.value)} placeholder="Assignee (optional)" className="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600 text-sm" />
             <div className="flex gap-2 pt-2">
                 <button onClick={onCancel} className="flex-1 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300">Cancel</button>
-                <button onClick={handleConfirm} className="flex-1 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded hover:bg-blue-700">Create Task</button>
+                <button onClick={handleConfirm} className="flex-1 py-1.5 text-xs font-semibold text-white bg-accent rounded hover:bg-accent-hover">Create Task</button>
             </div>
         </div>
     );
@@ -450,7 +450,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ isOpen, onClose, pr
                                             )}
                                         </div>
                                     ) : (
-                                        <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none border border-gray-200 dark:border-gray-600'}`}>
+                                        <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${msg.role === 'user' ? 'bg-accent text-white rounded-br-none' : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none border border-gray-200 dark:border-gray-600'}`}>
                                             {msg.text}
                                         </div>
                                     )}
@@ -462,7 +462,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ isOpen, onClose, pr
                         <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                             <div className="relative">
                                 <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder="Type a message..." className="w-full pl-4 pr-12 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner" />
-                                <button onClick={handleSendMessage} disabled={!query.trim() || isLoading} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
+                                <button onClick={handleSendMessage} disabled={!query.trim() || isLoading} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-accent text-white rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
                             </div>
                         </div>
                     </>

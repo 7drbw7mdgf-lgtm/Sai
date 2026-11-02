@@ -4,23 +4,34 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/benchline-logo.svg" />
   <title>Benchline</title>
   <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoVBL5gI9kknDUH2soBHFrDCVgjLAg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { accent: {
+        DEFAULT: 'rgb(var(--color-primary-500) / <alpha-value>)',
+        hover: 'rgb(var(--color-primary-600) / <alpha-value>)',
+        strong: 'rgb(var(--color-primary-700) / <alpha-value>)',
+        light: 'rgb(var(--color-primary-300) / <alpha-value>)',
+        soft: 'rgb(var(--color-primary-50) / <alpha-value>)',
+        soft2: 'rgb(var(--color-primary-100) / <alpha-value>)',
+      } } } },
+    };</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Manrope:wght@500;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       /* Sparkboard Brand Coral Palette */
-      --color-primary-50: 254 242 240;
-      --color-primary-100: 254 226 220;
-      --color-primary-200: 252 201 189;
-      --color-primary-300: 248 162 143;
+      --color-primary-50: 253 242 238;
+      --color-primary-100: 251 228 219;
+      --color-primary-200: 249 205 188;
+      --color-primary-300: 245 155 125;
       --color-primary-500: 239 117 78;
-      --color-primary-600: 235 98 56;
-      --color-primary-700: 216 79 40;
-      --color-primary-800: 174 65 34;
+      --color-primary-600: 216 95 59;
+      --color-primary-700: 194 80 44;
+      --color-primary-800: 163 63 32;
 
       /* Sparkboard Authentic Theme Variables */
       --sb-yellow: #f8df87;
@@ -30,8 +41,8 @@
       --sb-blue: #cde4e7;
       --sb-border: #e6e6e2;
       --sb-text: #292c31;
-      --sb-primary: #ef754e;
-      --sb-primary-hover: #d85f3b;
+      --sb-primary: rgb(var(--color-primary-500));
+      --sb-primary-hover: rgb(var(--color-primary-600));
 
       --font-family-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-family-heading: 'Manrope', 'DM Sans', sans-serif;

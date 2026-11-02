@@ -168,7 +168,7 @@ const Timeline: React.FC<TimelineProps> = ({
                             ${emphasis === 'top'
                                 ? "justify-start px-2 text-xs font-bold tracking-tight text-[#292c31] dark:text-gray-200 font-['Manrope']"
                                 : `justify-center text-[11px] font-semibold ${isWeekendCell ? 'text-gray-400 bg-black/[0.025] dark:bg-white/[0.02]' : 'text-[#7a8472] dark:text-gray-400'}`}
-                            ${isToday ? 'bg-[#fdf2ee] dark:bg-[#38221c]' : ''}
+                            ${isToday ? 'bg-accent-soft dark:bg-[#38221c]' : ''}
                             ${isPastEnd ? 'opacity-50' : ''}
                         `}
                         // 'clip' (unlike 'hidden') doesn't create a scroll container, so the sticky label below still works.
@@ -176,7 +176,7 @@ const Timeline: React.FC<TimelineProps> = ({
                         title={seg.label}
                     >
                         {isToday ? (
-                            <span className="px-1.5 h-5 rounded-full bg-[#ef754e] text-white font-bold text-[10px] flex items-center shadow-2xs">{seg.label}</span>
+                            <span className="px-1.5 h-5 rounded-full bg-accent text-white font-bold text-[10px] flex items-center shadow-2xs">{seg.label}</span>
                         ) : emphasis === 'top' ? (
                             // Month/year labels stay pinned to the left edge while their segment is in view.
                             <span className="sticky left-2">{seg.label}</span>
@@ -198,7 +198,7 @@ const Timeline: React.FC<TimelineProps> = ({
                 {renderHeaderRow(bottomSegments, 'bottom')}
                 {showToday && (
                     <div
-                        className="absolute bottom-0 w-2 h-2 -mb-1 -translate-x-1/2 rounded-full bg-[#ef754e] z-10 pointer-events-none"
+                        className="absolute bottom-0 w-2 h-2 -mb-1 -translate-x-1/2 rounded-full bg-accent z-10 pointer-events-none"
                         style={{ left: (todayOffset + 0.5) * zoom }}
                     />
                 )}
@@ -216,7 +216,7 @@ const Timeline: React.FC<TimelineProps> = ({
                                 key={row.key}
                                 className={`absolute left-0 right-0 border-b
                                     ${isGroup ? 'bg-[#fafaf8] dark:bg-gray-800/60 border-[#e6e6e2] dark:border-gray-800' : 'border-[#f0f0ec] dark:border-gray-800/70'}
-                                    ${isSelected ? 'bg-[#fdf5f2]/80 dark:bg-[#2d221f]/60' : ''}
+                                    ${isSelected ? 'bg-accent-soft/80 dark:bg-[#2d221f]/60' : ''}
                                 `}
                                 style={{ top: row.top, height: row.height }}
                             />
@@ -248,7 +248,7 @@ const Timeline: React.FC<TimelineProps> = ({
                     ))}
 
                     {showToday && (
-                        <div className="absolute top-0 bottom-0 w-[2px] -ml-px bg-[#ef754e]/85" style={{ left: (todayOffset + 0.5) * zoom }} />
+                        <div className="absolute top-0 bottom-0 w-[2px] -ml-px bg-accent/85" style={{ left: (todayOffset + 0.5) * zoom }} />
                     )}
                 </div>
 
@@ -287,7 +287,7 @@ const Timeline: React.FC<TimelineProps> = ({
                             if (!item.span) return null;
                             const left = diffInDays(projectStartDate, item.span.startDate) * zoom;
                             const width = (diffInDays(item.span.startDate, item.span.endDate) + 1) * zoom;
-                            const color = item.data.color || '#ef754e';
+                            const color = item.data.color || 'rgb(var(--color-primary-500))';
                             return (
                                 <div
                                     key={row.key}

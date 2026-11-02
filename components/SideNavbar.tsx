@@ -39,30 +39,27 @@ const NavHomeIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const NavTimelineIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <IconBase {...props}>
-        <path d="M4 7h16" />
-        <path d="M4 12h16" />
-        <path d="M4 17h16" />
-        <path d="M7 5v4" />
-        <path d="M13 10v4" />
-        <path d="M17 15v4" />
+        <path d="M4 6.5h9" />
+        <path d="M8 12h9" />
+        <path d="M11 17.5h9" />
     </IconBase>
 );
 
 const NavTasksIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <IconBase {...props}>
-        <rect x="5" y="4" width="14" height="16" rx="3" />
-        <path d="m8.25 9 1.25 1.25L12 7.75" />
-        <path d="M14 9.25h2" />
-        <path d="m8.25 14 1.25 1.25L12 12.75" />
-        <path d="M14 14.25h2" />
+        <rect x="4" y="4" width="16" height="16" rx="3" />
+        <path d="m7.5 9 1.25 1.25L11.25 7.75" />
+        <path d="M13.5 9.25h3" />
+        <path d="m7.5 14.5 1.25 1.25 2.5-2.5" />
+        <path d="M13.5 14.75h3" />
     </IconBase>
 );
 
 const NavCalendarIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <IconBase {...props}>
         <rect x="4" y="5.5" width="16" height="14.5" rx="3" />
-        <path d="M8 3.5v4" />
-        <path d="M16 3.5v4" />
+        <path d="M8 4v3.5" />
+        <path d="M16 4v3.5" />
         <path d="M4 10h16" />
         <path d="M8 14h.01" />
         <path d="M12 14h.01" />
@@ -81,9 +78,9 @@ const NavNotesIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const NavKanbanIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <IconBase {...props}>
-        <rect x="3.5" y="4.5" width="5" height="15" rx="1.5" />
-        <rect x="10.5" y="4.5" width="5" height="10" rx="1.5" />
-        <rect x="17.5" y="4.5" width="5" height="7" rx="1.5" />
+        <rect x="4" y="4" width="4" height="16" rx="1.5" />
+        <rect x="10" y="4" width="4" height="11" rx="1.5" />
+        <rect x="16" y="4" width="4" height="8" rx="1.5" />
     </IconBase>
 );
 
@@ -97,9 +94,9 @@ const NavSparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const NavAddTaskIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <IconBase {...props}>
-        <rect x="5" y="5" width="14" height="14" rx="3" />
-        <path d="M12 8.5v7" />
-        <path d="M8.5 12h7" />
+        <rect x="4" y="4" width="16" height="16" rx="3" />
+        <path d="M12 8v8" />
+        <path d="M8 12h8" />
     </IconBase>
 );
 
@@ -136,21 +133,20 @@ const NavSettingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </IconBase>
 );
 
-const NavButton: React.FC<{ tooltip: string; isActive: boolean; onClick: () => void; children: React.ReactNode; showLabel?: boolean }> = ({ tooltip, isActive, onClick, children, showLabel = false }) => (
+const NavButton: React.FC<{ tooltip: string; label?: string; isActive: boolean; onClick: () => void; children: React.ReactNode; showLabel?: boolean }> = ({ tooltip, label = tooltip, isActive, onClick, children, showLabel = false }) => (
     <Tooltip text={tooltip}>
         <button
-            aria-label={tooltip}
-            title={tooltip}
+            aria-label={label}
             onClick={onClick}
             className={`relative flex h-10 items-center rounded-xl transition-all duration-200 ease-in-out
                 ${showLabel ? 'w-[8.75rem] justify-start gap-3 px-3' : 'w-10 justify-center'}
                 ${isActive 
-                    ? 'bg-[#ef754e] text-white shadow-xs font-semibold' 
+                    ? 'bg-accent text-white shadow-xs font-semibold' 
                     : 'text-[#50564d] dark:text-gray-400 hover:bg-[#f0efeb] dark:hover:bg-gray-800/60 hover:text-[#292c31] dark:hover:text-gray-200 font-medium'}
             `}
         >
             {children}
-            {showLabel && <span className="truncate text-sm">{tooltip}</span>}
+            {showLabel && <span className="truncate text-sm">{label}</span>}
         </button>
     </Tooltip>
 );
@@ -184,33 +180,26 @@ const SideNavbar: React.FC<SideNavbarProps> = ({
                 </div>
             </div>
 
-            <div className="space-y-2 flex flex-col">
+            <div className="space-y-1.5 flex flex-col">
                 <Tooltip text="Add Task (N)">
-                    <button 
-                        aria-label="Add Task" 
-                        title="Add Task" 
-                        onClick={onAddTask} 
-                        className="flex h-10 w-[8.75rem] items-center justify-start gap-3 rounded-xl px-3 bg-[#fdf2ee] hover:bg-[#fbe4db] text-[#ef754e] transition-all font-semibold active:scale-98"
+                    <button
+                        aria-label="Add Task"
+                        onClick={onAddTask}
+                        className="flex h-10 w-[8.75rem] items-center justify-start gap-3 rounded-xl px-3 bg-accent-soft hover:bg-accent-soft2 dark:bg-accent/15 dark:hover:bg-accent/25 text-accent transition-all duration-200 ease-in-out font-semibold active:scale-[0.98]"
                     >
-                        <NavAddTaskIcon className="w-[20px] h-[20px] text-[#ef754e]" />
-                        <span className="truncate text-sm font-bold">New Task</span>
+                        <NavAddTaskIcon className="w-[20px] h-[20px] text-accent" />
+                        <span className="truncate text-sm">New Task</span>
                     </button>
                 </Tooltip>
                 
                 <div className="mx-2 h-px bg-[#e6e6e2] dark:bg-gray-800 my-1"></div>
 
-                 <Tooltip text="Help (?)">
-                    <button aria-label="Help" title="Help" onClick={onOpenShortcutHelp} className="flex h-10 w-[8.75rem] items-center justify-start gap-3 rounded-xl px-3 text-[#50564d] transition-colors hover:bg-[#f0efeb] dark:text-gray-400 dark:hover:bg-gray-800/50">
-                        <NavHelpIcon className="w-[20px] h-[20px]" />
-                        <span className="truncate text-sm font-medium">Help</span>
-                    </button>
-                </Tooltip>
-                 <Tooltip text="Settings">
-                    <button aria-label="Settings" title="Settings" onClick={onSettings} className="flex h-10 w-[8.75rem] items-center justify-start gap-3 rounded-xl px-3 text-[#50564d] transition-colors hover:bg-[#f0efeb] dark:text-gray-400 dark:hover:bg-gray-800/50">
-                        <NavSettingsIcon className="w-[20px] h-[20px]" />
-                        <span className="truncate text-sm font-medium">Settings</span>
-                    </button>
-                </Tooltip>
+                <NavButton tooltip="Help (?)" label="Help" isActive={false} onClick={onOpenShortcutHelp} showLabel>
+                    <NavHelpIcon className="w-[20px] h-[20px]" />
+                </NavButton>
+                <NavButton tooltip="Settings" isActive={false} onClick={onSettings} showLabel>
+                    <NavSettingsIcon className="w-[20px] h-[20px]" />
+                </NavButton>
             </div>
         </nav>
     );

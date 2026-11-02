@@ -1,5 +1,6 @@
 
 import React, { useRef } from 'react';
+import BenchlineLogo from './BenchlineLogo';
 import { View, SearchResult, ProjectData } from '../types';
 import Tooltip from './Tooltip';
 import DropdownMenu, { MenuItem } from './FileMenu';
@@ -14,16 +15,11 @@ import { RedoIcon } from './icons/RedoIcon';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
 
 
-const SparkIcon = ({ className = "w-5 h-5 text-[#ef754e]" }: { className?: string }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2a1.25 1.25 0 0 1 1.25 1.25v5.474l3.87-3.87a1.25 1.25 0 1 1 1.768 1.768l-3.87 3.87h5.474a1.25 1.25 0 1 1 0 2.5h-5.474l3.87 3.87a1.25 1.25 0 1 1-1.768 1.768l-3.87-3.87v5.474a1.25 1.25 0 1 1-2.5 0v-5.474l-3.87 3.87a1.25 1.25 0 0 1-1.768-1.768l3.87-3.87H3.25a1.25 1.25 0 1 1 0-2.5h5.474l-3.87-3.87a1.25 1.25 0 0 1 1.768-1.768l3.87 3.87V3.25A1.25 1.25 0 0 1 12 2Z" />
-    </svg>
-);
-
 interface HeaderProps {
     currentView: View;
     onLoad: () => void;
     onSave: () => void;
+    onRestore: (file: File) => void;
     onTimeframe: () => void;
     undo: () => void;
     redo: () => void;
@@ -40,13 +36,14 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({
     currentView,
-    onLoad, onSave, onTimeframe,
+    onLoad, onSave, onRestore, onTimeframe,
     undo, redo, canUndo, canRedo,
     searchQuery, onSearchChange, isSearchPanelOpen, onSearchFocusChange, searchResults, onSearchResultSelect,
     projectData
 }) => {
     
     const searchContainerRef = useRef(null);
+    const restoreInputRef = useRef<HTMLInputElement>(null);
     useOnClickOutside(searchContainerRef, () => onSearchFocusChange(false));
 
     return (
@@ -54,15 +51,15 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex min-w-0 items-center gap-4">
                  <div className="flex min-w-0 items-center gap-3">
                     <div className="flex items-center gap-2 cursor-pointer select-none">
-                        <SparkIcon className="w-5 h-5 text-[#ef754e]" />
-                        <span className="text-xl font-extrabold tracking-tight text-[#292c31] dark:text-gray-100 font-['Manrope']">benchline<span className="text-[#ef754e]">.</span></span>
+                        <BenchlineLogo className="w-7 h-7" />
+                        <span className="text-xl font-extrabold tracking-tight text-[#292c31] dark:text-gray-100 font-['Manrope']">benchline<span className="text-accent">.</span></span>
                     </div>
 
                     <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-[#f4f5f0] dark:bg-gray-800 border border-[#e6e6e2] dark:border-gray-700 rounded-full text-[10.5px] font-bold text-[#626e56] dark:text-[#a3b397] tracking-wider uppercase">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#8c9a7b]"></span>
                         <span>Workspace</span>
                         <span className="text-gray-300 dark:text-gray-600">/</span>
-                        <span className="text-[#ef754e] font-extrabold">{currentView}</span>
+                        <span className="text-accent font-extrabold">{currentView}</span>
                     </div>
                  </div>
 
@@ -75,10 +72,23 @@ const Header: React.FC<HeaderProps> = ({
                     </div>
                 }>
                     <MenuItem onClick={onLoad} icon={<ArrowUpTrayIcon className="w-5 h-5"/>} text="Load Demo..." />
-                    <MenuItem onClick={onSave} icon={<ArrowDownTrayIcon className="w-5 h-5"/>} text="Save Project" />
+                    <MenuItem onClick={onSave} icon={<ArrowDownTrayIcon className="w-5 h-5"/>} text="Download Backup" />
+                    <MenuItem onClick={() => restoreInputRef.current?.click()} icon={<ArrowUpTrayIcon className="w-5 h-5"/>} text="Restore Backup..." />
                     <div className="h-px bg-[#e6e6e2] dark:bg-gray-700 my-1" />
                     <MenuItem onClick={onTimeframe} icon={<AdjustmentsHorizontalIcon className="w-5 h-5"/>} text="Adjust Timeframe..." />
                 </DropdownMenu>
+                <input
+                    ref={restoreInputRef}
+                    type="file"
+                    accept=".json,application/json"
+                    aria-label="Restore project backup"
+                    className="hidden"
+                    onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        e.target.value = '';
+                        if (file) onRestore(file);
+                    }}
+                />
 
                 <div className="flex items-center gap-0.5 rounded-lg border border-[#e6e6e2] bg-[#fafaf8] p-0.5 dark:border-gray-700 dark:bg-gray-800">
                     <Tooltip text="Undo (Ctrl+Z)">
@@ -117,7 +127,7 @@ const Header: React.FC<HeaderProps> = ({
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
                             onFocus={() => onSearchFocusChange(true)}
-                            className="w-64 sm:w-72 h-9 pl-9 pr-4 rounded-full bg-[#f9faf7] dark:bg-gray-800 border border-[#e6e6e2] dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-[#ef754e] focus:ring-1 focus:ring-[#ef754e] outline-none transition-all text-xs font-medium placeholder-gray-400 text-[#292c31] dark:text-gray-100"
+                            className="w-64 sm:w-72 h-9 pl-9 pr-4 rounded-full bg-[#f9faf7] dark:bg-gray-800 border border-[#e6e6e2] dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all text-xs font-medium placeholder-gray-400 text-[#292c31] dark:text-gray-100"
                         />
                     </div>
                     {isSearchPanelOpen && projectData && (
@@ -127,13 +137,6 @@ const Header: React.FC<HeaderProps> = ({
                             projectData={projectData}
                         />
                     )}
-                </div>
-
-                <div 
-                    title="User Profile" 
-                    className="w-8 h-8 rounded-full bg-[#ece6de] dark:bg-gray-700 text-[#292c31] dark:text-gray-200 font-bold text-xs flex items-center justify-center border border-[#d8dcd5] dark:border-gray-600 shadow-2xs select-none cursor-pointer hover:ring-2 hover:ring-[#ef754e] transition-all"
-                >
-                    SB
                 </div>
             </div>
         </header>

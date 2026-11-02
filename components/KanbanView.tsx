@@ -1,18 +1,13 @@
 import React, { useState, useMemo } from 'react';
+import BenchlineLogo from './BenchlineLogo';
 import { ProjectData, Task, Priority, Person, Group } from '../types';
 import KanbanCard from './KanbanCard';
-
-const SparkIcon = ({ className = "w-5 h-5 text-[#ef754e]" }: { className?: string }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2a1.25 1.25 0 0 1 1.25 1.25v5.474l3.87-3.87a1.25 1.25 0 1 1 1.768 1.768l-3.87 3.87h5.474a1.25 1.25 0 1 1 0 2.5h-5.474l3.87 3.87a1.25 1.25 0 1 1-1.768 1.768l-3.87-3.87v5.474a1.25 1.25 0 1 1-2.5 0v-5.474l-3.87 3.87a1.25 1.25 0 0 1-1.768-1.768l3.87-3.87H3.25a1.25 1.25 0 1 1 0-2.5h5.474l-3.87-3.87a1.25 1.25 0 0 1 1.768-1.768l3.87 3.87V3.25A1.25 1.25 0 0 1 12 2Z" />
-    </svg>
-);
 
 export interface KanbanViewProps {
     projectData: ProjectData;
     onSetData: (data: (prev: ProjectData | null) => ProjectData | null) => void;
     onRequestEditTask: (taskId: string) => void;
-    onRequestAddTask?: () => void;
+    onRequestAddTask: (initialCompletion?: number) => void;
 }
 
 type ColumnId = 'todo' | 'inprogress' | 'review' | 'done';
@@ -82,10 +77,6 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
 
     // Drag-over styling
     const [dragOverCol, setDragOverCol] = useState<ColumnId | null>(null);
-
-    // Quick inline card creation per column
-    const [addingToCol, setAddingToCol] = useState<ColumnId | null>(null);
-    const [quickTaskTitle, setQuickTaskTitle] = useState('');
 
     // Categorize a task into a Kanban column
     const getTaskColId = (task: Task): ColumnId => {
@@ -193,42 +184,6 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
         }
     };
 
-    // Create quick inline task
-    const handleCreateQuickTask = (colId: ColumnId) => {
-        if (!quickTaskTitle.trim()) {
-            setAddingToCol(null);
-            return;
-        }
-
-        const now = new Date();
-        const due = new Date();
-        due.setDate(now.getDate() + 7);
-
-        let initialCompletion = 0;
-        if (colId === 'inprogress') initialCompletion = 40;
-        else if (colId === 'review') initialCompletion = 85;
-        else if (colId === 'done') initialCompletion = 100;
-
-        const newTask: Task = {
-            id: `task-${Date.now()}`,
-            name: quickTaskTitle.trim(),
-            startDate: now,
-            endDate: due,
-            completion: initialCompletion,
-            color: '#ef754e',
-            assignedTo: [],
-            priority: Priority.Medium,
-        };
-
-        onSetData((prev) => {
-            if (!prev) return prev;
-            return { ...prev, tasks: [...prev.tasks, newTask] };
-        });
-
-        setQuickTaskTitle('');
-        setAddingToCol(null);
-    };
-
     // Board Statistics
     const totalCount = tasks.length;
     const completedCount = tasks.filter((t) => t.completion === 100).length;
@@ -242,7 +197,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                     {/* Title & Board Eyebrow */}
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <SparkIcon className="w-5 h-5 text-[#ef754e]" />
+                            <BenchlineLogo className="w-5 h-5" />
                             <span className="text-xs font-bold uppercase tracking-wider text-[#7a8472] dark:text-[#9ea996]">
                                 Personal Workspace / Board View
                             </span>
@@ -254,7 +209,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                             <div className="flex items-center gap-2 px-2.5 py-1 bg-[#f4f5f0] dark:bg-gray-800 rounded-lg border border-[#e6e6e2] dark:border-gray-700 text-xs font-semibold text-[#545d4a] dark:text-[#a0ae95]">
                                 <span>{completedCount} of {totalCount} completed</span>
                                 <span className="text-gray-300 dark:text-gray-600">•</span>
-                                <span className="text-[#ef754e] font-bold">{completionPct}%</span>
+                                <span className="text-accent font-bold">{completionPct}%</span>
                             </div>
                         </div>
                     </div>
@@ -268,7 +223,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                 placeholder="Filter tasks..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-44 sm:w-52 h-9 pl-8 pr-3 rounded-xl bg-[#fafaf8] dark:bg-gray-800 border border-[#e6e6e2] dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-[#ef754e] focus:ring-1 focus:ring-[#ef754e] text-xs font-medium outline-none transition-all placeholder-gray-400"
+                                className="w-44 sm:w-52 h-9 pl-8 pr-3 rounded-xl bg-[#fafaf8] dark:bg-gray-800 border border-[#e6e6e2] dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-accent focus:ring-1 focus:ring-accent text-xs font-medium outline-none transition-all placeholder-gray-400"
                             />
                             <svg className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <circle cx="11" cy="11" r="8" strokeWidth="2" />
@@ -331,8 +286,8 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
 
                         {/* New Task Button */}
                         <button
-                            onClick={() => (onRequestAddTask ? onRequestAddTask() : setAddingToCol('todo'))}
-                            className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[#ef754e] hover:bg-[#d85f3b] text-white text-xs font-bold transition-all shadow-xs active:scale-98"
+                            onClick={() => onRequestAddTask()}
+                            className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-accent hover:bg-accent-hover text-white text-xs font-bold transition-all shadow-xs active:scale-98"
                         >
                             <span>＋</span>
                             <span>New Task</span>
@@ -356,7 +311,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                 onDrop={(e) => handleDrop(e, col.id)}
                                 className={`w-80 flex-shrink-0 flex flex-col max-h-full rounded-2xl border transition-all duration-200 ${
                                     isOver
-                                        ? 'border-[#ef754e] bg-[#fbf5f2]/90 dark:bg-[#342420]/80 ring-2 ring-[#ef754e]/30 scale-[1.01]'
+                                        ? 'border-accent bg-accent-soft/90 dark:bg-accent/15 ring-2 ring-accent/30 scale-[1.01]'
                                         : 'border-[#e6e6e2] dark:border-gray-800 bg-[#fbfbf9]/85 dark:bg-[#1e2024]/85 backdrop-blur-xs'
                                 }`}
                             >
@@ -377,57 +332,10 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                         </span>
                                     </div>
 
-                                    {/* Quick add trigger button */}
-                                    <button
-                                        title={`Add task to ${col.title}`}
-                                        onClick={() => {
-                                            setAddingToCol(col.id);
-                                            setQuickTaskTitle('');
-                                        }}
-                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-[#f0efeb] dark:hover:bg-gray-700 transition-colors"
-                                    >
-                                        ＋
-                                    </button>
                                 </div>
 
                                 {/* Column Task List */}
                                 <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[140px]">
-                                    {/* Inline Add Task Form */}
-                                    {addingToCol === col.id && (
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-[#ef754e] p-3 shadow-md animate-in fade-in">
-                                            <textarea
-                                                autoFocus
-                                                rows={2}
-                                                placeholder={`What needs to be done in ${col.title}?`}
-                                                value={quickTaskTitle}
-                                                onChange={(e) => setQuickTaskTitle(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                                        e.preventDefault();
-                                                        handleCreateQuickTask(col.id);
-                                                    } else if (e.key === 'Escape') {
-                                                        setAddingToCol(null);
-                                                    }
-                                                }}
-                                                className="w-full text-xs font-medium resize-none border-none outline-none bg-transparent placeholder-gray-400 text-gray-900 dark:text-gray-100"
-                                            />
-                                            <div className="flex items-center justify-end gap-1.5 mt-2">
-                                                <button
-                                                    onClick={() => setAddingToCol(null)}
-                                                    className="px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    onClick={() => handleCreateQuickTask(col.id)}
-                                                    className="px-3 py-1 bg-[#ef754e] hover:bg-[#d85f3b] text-white text-xs font-bold rounded-lg shadow-2xs"
-                                                >
-                                                    Add
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-
                                     {/* Cards */}
                                     {colTasks.length > 0 ? (
                                         colTasks.map((task) => (
@@ -443,29 +351,24 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                             />
                                         ))
                                     ) : (
-                                        !addingToCol && (
-                                            <div className="h-28 border border-dashed border-[#e6e6e2] dark:border-gray-800 rounded-xl flex flex-col items-center justify-center text-center p-3 text-gray-400 dark:text-gray-600">
-                                                <span className="text-lg opacity-40 mb-1">✳</span>
-                                                <span className="text-xs font-medium">No tasks in {col.title}</span>
-                                                <button
-                                                    onClick={() => setAddingToCol(col.id)}
-                                                    className="text-[11px] text-[#ef754e] hover:underline font-bold mt-1"
-                                                >
-                                                    ＋ Add one now
-                                                </button>
-                                            </div>
-                                        )
+                                        <div className="h-28 border border-dashed border-[#e6e6e2] dark:border-gray-800 rounded-xl flex flex-col items-center justify-center text-center p-3 text-gray-400 dark:text-gray-600">
+                                            <span className="text-lg opacity-40 mb-1">✳</span>
+                                            <span className="text-xs font-medium">No tasks in {col.title}</span>
+                                            <button
+                                                onClick={() => onRequestAddTask(col.targetPct)}
+                                                className="text-[11px] text-accent hover:underline font-bold mt-1"
+                                            >
+                                                ＋ Add one now
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
 
                                 {/* Column Bottom Quick Add */}
                                 <div className="p-3 border-t border-[#e6e6e2]/60 dark:border-gray-800/60">
                                     <button
-                                        onClick={() => {
-                                            setAddingToCol(col.id);
-                                            setQuickTaskTitle('');
-                                        }}
-                                        className="w-full py-2 px-3 rounded-xl border border-dashed border-[#e6e6e2] dark:border-gray-800 hover:border-[#ef754e] dark:hover:border-[#ef754e] text-xs font-semibold text-[#545d4a] dark:text-gray-400 hover:text-[#ef754e] flex items-center justify-center gap-1.5 transition-all bg-white/40 dark:bg-gray-800/40"
+                                        onClick={() => onRequestAddTask(col.targetPct)}
+                                        className="w-full py-2 px-3 rounded-xl border border-dashed border-[#e6e6e2] dark:border-gray-800 hover:border-accent dark:hover:border-accent text-xs font-semibold text-[#545d4a] dark:text-gray-400 hover:text-accent flex items-center justify-center gap-1.5 transition-all bg-white/40 dark:bg-gray-800/40"
                                     >
                                         <span>＋</span>
                                         <span>Add Task</span>

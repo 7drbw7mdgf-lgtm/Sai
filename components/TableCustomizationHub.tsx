@@ -116,7 +116,7 @@ const TableCustomizationHub: React.FC<TableCustomizationHubProps> = ({ isOpen, o
                             >
                                 {fieldTypes.map(type => <option key={type} value={type}>{type}</option>)}
                             </select>
-                            <button onClick={handleAddField} disabled={!newFieldName.trim()} className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300">
+                            <button onClick={handleAddField} disabled={!newFieldName.trim()} className="p-2 bg-accent text-white rounded-md hover:bg-accent-hover disabled:bg-gray-300">
                                 <PlusIcon className="w-4 h-4" />
                             </button>
                         </div>
@@ -139,7 +139,7 @@ const TableCustomizationHub: React.FC<TableCustomizationHubProps> = ({ isOpen, o
 
             <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-gray-200">
                 <button onClick={onClose} className="px-5 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700">Cancel</button>
-                <button onClick={handleConfirm} className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold text-white">Save Changes</button>
+                <button onClick={handleConfirm} className="px-5 py-2 rounded-lg bg-accent hover:bg-accent-hover font-semibold text-white">Save Changes</button>
             </div>
         </Modal>
     );

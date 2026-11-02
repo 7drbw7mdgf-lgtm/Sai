@@ -3,6 +3,11 @@ import { Group, Person, Task, Priority, DesignLayout, CustomField, Assignment, N
 
 export const DEFAULT_THEMES: Theme[] = [
     {
+        id: 'coral', name: 'Benchline Coral', colors: {
+            '50': '#fdf2ee', '100': '#fbe4db', '200': '#f9cdbc', '300': '#f59b7d', '400': '#f28863', '500': '#ef754e', '600': '#d85f3b', '700': '#c2502c', '800': '#a33f20', '900': '#7f3119',
+        }
+    },
+    {
         id: 'blue', name: 'Ocean Blue', colors: {
             '50': '#eff6ff', '100': '#dbeafe', '200': '#bfdbfe', '300': '#93c5fd', '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '800': '#1e40af', '900': '#1e3a8a',
         }

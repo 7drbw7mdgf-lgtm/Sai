@@ -75,8 +75,8 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
                     onClick={() => !isDisabled && handleDateClick(day)}
                     className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors text-sm
                         ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'cursor-pointer'}
-                        ${!isDisabled && isSelected ? 'bg-blue-600 text-white font-semibold' : ''}
-                        ${!isDisabled && !isSelected && isToday ? 'bg-blue-100 text-blue-700 font-semibold' : ''}
+                        ${!isDisabled && isSelected ? 'bg-accent text-white font-semibold' : ''}
+                        ${!isDisabled && !isSelected && isToday ? 'bg-accent-soft text-accent-strong font-semibold' : ''}
                         ${!isDisabled && !isSelected && !isToday ? 'hover:bg-gray-100 text-gray-700' : ''}
                     `}
                 >

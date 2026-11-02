@@ -85,7 +85,7 @@ const DependencyLines: React.FC<DependencyLinesProps> = ({ dependencies, onRemov
                     markerHeight="6"
                     orient="auto"
                 >
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef754e" />
+                    <path d="M 0 0 L 10 5 L 0 10 z" style={{ fill: 'rgb(var(--color-primary-500))' }} />
                 </marker>
             </defs>
             {dependencies.map((dep, index) => {
@@ -104,7 +104,7 @@ const DependencyLines: React.FC<DependencyLinesProps> = ({ dependencies, onRemov
                             strokeWidth="1.75"
                             fill="none"
                             markerEnd="url(#arrow-head)"
-                            className="group-hover:stroke-[#ef754e] transition-colors"
+                            className="group-hover:stroke-accent transition-colors"
                         />
                         
                         {onRemoveDependency && (

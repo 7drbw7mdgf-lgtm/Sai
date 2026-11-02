@@ -140,7 +140,7 @@ const PeopleManagementHub: React.FC<PeopleManagementHubProps> = ({ projectData, 
                                 placeholder="Add new member..."
                                 className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                            <button type="submit" className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors disabled:bg-gray-400 text-sm" disabled={!newPersonName.trim()}>Add</button>
+                            <button type="submit" className="px-3 py-1.5 rounded-md bg-accent hover:bg-accent-hover text-white font-semibold transition-colors disabled:bg-gray-400 text-sm" disabled={!newPersonName.trim()}>Add</button>
                         </form>
                     </div>
                 </div>

@@ -6,6 +6,9 @@ import {
     WidgetLayout, WidgetType, Experiment
 } from './types';
 import { useHistory } from './hooks/useHistory';
+import { useCalendarAutoSync } from './hooks/useCalendarConnections';
+import { useProjectAutosave } from './hooks/useProjectAutosave';
+import { downloadProjectBackup, loadSavedProject, parseProject } from './services/projectStorage';
 import { useDebounce } from './hooks/useDebounce';
 import {
     DUMMY_PROJECT_START_DATE, DUMMY_PROJECT_END_DATE, DUMMY_TASKS, DUMMY_GROUPS, DUMMY_PEOPLE,
@@ -27,9 +30,8 @@ import MeetingDetailPanel from './components/MeetingDetailPanel';
 import PeopleManagementHub from './components/PeopleManagementHub';
 import ShortcutHelpModal from './components/ShortcutHelpModal';
 import TimeframeModal from './components/TimeframeModal';
-import SettingsModal from './components/SettingsModal';
+import SettingsModal, { PageId as SettingsPageId } from './components/SettingsModal';
 import PlaceholderView from './components/PlaceholderView';
-import { FeedbackModal } from './components/FeedbackModal';
 import ExperimentDetailPanel from './components/ExperimentDetailPanel';
 import AIAssistantPanel from './components/AIAssistantPanel';
 
@@ -47,7 +49,7 @@ const defaultHomeScreenLayout: WidgetLayout[] = [
 ];
 
 const initialSettings: AppSettings = {
-    activeThemeId: 'blue',
+    activeThemeId: 'coral',
     themes: DEFAULT_THEMES,
     darkMode: false,
     defaultTaskDuration: 1,
@@ -127,7 +129,7 @@ const initialMeetings: Meeting[] = [
     },
 ];
 
-const initialProjectData: ProjectData = {
+const demoProjectData: ProjectData = {
     tasks: DUMMY_TASKS,
     groups: DUMMY_GROUPS,
     people: DUMMY_PEOPLE,
@@ -140,9 +142,14 @@ const initialProjectData: ProjectData = {
     experiments: [],
 };
 
+const initialProjectData: ProjectData = loadSavedProject() ?? demoProjectData;
+
 const App: React.FC = () => {
     const [appState, setAppState] = useState<AppState>(AppState.MAIN);
     const [projectData, setProjectData, undo, redo, canUndo, canRedo] = useHistory<ProjectData | null>(initialProjectData);
+    useCalendarAutoSync(projectData, setProjectData);
+    const { notice: saveNotice, dismissNotice } = useProjectAutosave(projectData);
+    const [restoreError, setRestoreError] = useState<string | null>(null);
     const [currentView, setCurrentView] = useState<View>(View.HOME);
     
     const [ganttViewMode, setGanttViewMode] = useState<'day' | 'week' | 'month'>('day');
@@ -160,6 +167,7 @@ const App: React.FC = () => {
                 if (!parsed.themes || parsed.themes.length === 0) {
                     parsed.themes = DEFAULT_THEMES;
                 }
+                parsed.themes = [...DEFAULT_THEMES.filter(d => !parsed.themes.some(t => t.id === d.id)), ...parsed.themes];
                 if (!parsed.activeThemeId || !parsed.themes.find(t => t.id === parsed.activeThemeId)) {
                     parsed.activeThemeId = DEFAULT_THEMES[0].id;
                 }
@@ -177,6 +185,7 @@ const App: React.FC = () => {
     };
 
     const [isAddTaskPanelOpen, setIsAddTaskPanelOpen] = useState(false);
+    const [addTaskCompletion, setAddTaskCompletion] = useState<number | undefined>(undefined);
     const [isAddMeetingPanelOpen, setIsAddMeetingPanelOpen] = useState(false);
     
     const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -187,9 +196,8 @@ const App: React.FC = () => {
     const [isShortcutHelpOpen, setIsShortcutHelpOpen] = useState(false);
     const [isTimeframeModalOpen, setIsTimeframeModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+    const [settingsInitialPage, setSettingsInitialPage] = useState<SettingsPageId | undefined>(undefined);
     const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
-    const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
-    const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
 
     const [dependencyLink, setDependencyLink] = useState<{ type: 'prerequisite' | 'postrequisite', fromTaskId: string } | null>(null);
 
@@ -314,6 +322,7 @@ const App: React.FC = () => {
     }, [settings.notesSettings]);
     
     const handleLoadDemo = () => {
+        if (appState === AppState.MAIN && !window.confirm('Replace your current project with the demo? You can use Undo to get it back until you reload.')) return;
         const now = new Date();
         const demoMeetings: Meeting[] = [
             {
@@ -366,6 +375,23 @@ const App: React.FC = () => {
         setAppState(AppState.MAIN);
     };
 
+    const handleRestoreBackup = async (file: File) => {
+        setRestoreError(null);
+        let restored: ProjectData;
+        try {
+            restored = parseProject(await file.text());
+        } catch (error) {
+            console.error('Could not read the backup:', error);
+            setRestoreError(`"${file.name}" isn't a valid Benchline backup, so nothing was changed.`);
+            return;
+        }
+        if (!window.confirm(`Replace your current project with "${file.name}"? You can use Undo to get it back until you reload.`)) return;
+        setEditingTaskId(null);
+        setEditingMeetingId(null);
+        setEditingExperimentId(null);
+        setProjectData(restored);
+    };
+
     const handleDatesSelected = (start: Date, end: Date) => {
         const data: ProjectData = {
             projectStartDate: start,
@@ -377,10 +403,15 @@ const App: React.FC = () => {
         setAppState(AppState.MAIN);
     };
 
+    const closeAddTaskPanel = () => {
+        setIsAddTaskPanelOpen(false);
+        setAddTaskCompletion(undefined);
+    };
+
     const handleAddTask = (newTask: Task) => {
         if (!projectData) return;
         setProjectData({ ...projectData, tasks: [...projectData.tasks, newTask] });
-        setIsAddTaskPanelOpen(false);
+        closeAddTaskPanel();
     };
 
     const handleDeleteTask = (taskId: string) => {
@@ -441,6 +472,7 @@ const App: React.FC = () => {
     };
 
     const handleKeyboardShortcuts = useCallback((e: KeyboardEvent) => {
+        if (isSettingsModalOpen) return;
         const activeEl = document.activeElement;
         if(activeEl && ['INPUT', 'TEXTAREA'].includes(activeEl.tagName) || activeEl?.hasAttribute('contenteditable')) return;
         if (e.ctrlKey || e.metaKey) return;
@@ -454,7 +486,7 @@ const App: React.FC = () => {
             case '/': e.preventDefault(); document.getElementById('global-search-bar')?.focus(); break;
             case '?': setIsShortcutHelpOpen(o => !o); break;
         }
-    }, []);
+    }, [isSettingsModalOpen]);
 
     useEffect(() => { window.addEventListener('keydown', handleKeyboardShortcuts); return () => window.removeEventListener('keydown', handleKeyboardShortcuts); }, [handleKeyboardShortcuts]);
 
@@ -478,72 +510,47 @@ const App: React.FC = () => {
                     projectData={projectData}
                     onSetData={setProjectData}
                     onRequestEditTask={setEditingTaskId}
-                    onRequestAddTask={() => setIsAddTaskPanelOpen(true)}
+                    onRequestAddTask={(completion) => { setAddTaskCompletion(completion); setIsAddTaskPanelOpen(true); }}
                 />;
             case View.GANTT: return <GanttChart projectData={projectData} onSetData={setProjectData} zoom={zoom} ganttViewMode={ganttViewMode} onGanttViewModeChange={setGanttViewMode} onRequestAddTask={() => { setIsAddTaskPanelOpen(true); }} onRequestEditTask={setEditingTaskId} dependencyLink={dependencyLink} onStartDependencyLink={handleStartLinking} onLinkTask={handleLinkTask} onCancelLinking={() => setDependencyLink(null)} onRemoveDependency={handleRemoveDependency} />;
             case View.TASKS: return <TasksView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} />;
-            case View.CALENDAR: return <CalendarView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} onRequestEditMeeting={setEditingMeetingId} />;
+            case View.CALENDAR: return <CalendarView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} onRequestEditMeeting={setEditingMeetingId} onOpenCalendarSync={() => { setSettingsInitialPage('calendar'); setIsSettingsModalOpen(true); }} />;
             case View.NOTES: return <TasksView projectData={projectData} onSetData={setProjectData} onRequestEditTask={setEditingTaskId} />;
             default: return <PlaceholderView title="Coming Soon" message={`The ${currentView} view is under construction.`} />;
         }
     };
     
-    const handleOpenFeedback = async () => {
-        const root = document.getElementById('root');
-        if (root) {
-            const btn = document.getElementById('feedback-trigger-btn');
-            if (btn) btn.style.display = 'none';
-
-            const html2canvas = (window as any).html2canvas;
-            if (html2canvas) {
-                try {
-                    const canvas = await html2canvas(root, { logging: false, useCORS: true });
-                    const dataUrl = canvas.toDataURL('image/png');
-                    setScreenshotUrl(dataUrl);
-                } catch (e) {
-                    console.error("Screenshot capture failed:", e);
-                }
-            }
-            if (btn) btn.style.display = '';
-        }
-        setIsFeedbackModalOpen(true);
-    };
-
     if (appState === AppState.SPLASH) return <SplashScreen onNewProject={() => setAppState(AppState.CALENDAR)} onLoadProject={handleLoadDemo} />;
     if (appState === AppState.CALENDAR) return <SplashScreen isCalendarView onDatesSelected={handleDatesSelected} />;
 
     return (
         <div className="h-screen w-screen flex font-sans bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100">
-            <SideNavbar currentView={currentView} onViewChange={setCurrentView} onSettings={() => setIsSettingsModalOpen(true)} onAddTask={() => setIsAddTaskPanelOpen(true)} onOpenShortcutHelp={() => setIsShortcutHelpOpen(true)} />
+            <SideNavbar currentView={currentView} onViewChange={setCurrentView} onSettings={() => { setSettingsInitialPage(undefined); setIsSettingsModalOpen(true); }} onAddTask={() => setIsAddTaskPanelOpen(true)} onOpenShortcutHelp={() => setIsShortcutHelpOpen(true)} />
             <div className="flex-1 flex flex-col min-w-0">
-                <Header currentView={currentView} onLoad={handleLoadDemo} onSave={() => {}} onTimeframe={() => setIsTimeframeModalOpen(true)} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} searchQuery={searchQuery} onSearchChange={setSearchQuery} isSearchPanelOpen={isSearchPanelOpen} onSearchFocusChange={setIsSearchFocused} searchResults={searchResults} onSearchResultSelect={handleSearchResultSelect} projectData={projectData} />
+                <Header currentView={currentView} onLoad={handleLoadDemo} onSave={() => { if (projectData) downloadProjectBackup(projectData); }} onRestore={handleRestoreBackup} onTimeframe={() => setIsTimeframeModalOpen(true)} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} searchQuery={searchQuery} onSearchChange={setSearchQuery} isSearchPanelOpen={isSearchPanelOpen} onSearchFocusChange={setIsSearchFocused} searchResults={searchResults} onSearchResultSelect={handleSearchResultSelect} projectData={projectData} />
                 <main className="flex-1 relative overflow-hidden"> {renderView()} </main>
             </div>
-            {(isAddTaskPanelOpen && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><AddTaskPanel onClose={() => setIsAddTaskPanelOpen(false)} onSave={handleAddTask} people={projectData.people} groups={projectData.groups} customFields={projectData.customFields || []} /></div>}
+            {(isAddTaskPanelOpen && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><AddTaskPanel onClose={closeAddTaskPanel} onSave={handleAddTask} initialCompletion={addTaskCompletion} groups={projectData.groups} /></div>}
             {(editingTaskId && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><TaskDetailPanel taskId={editingTaskId} projectData={projectData} onSetData={setProjectData} onClose={() => setEditingTaskId(null)} onDelete={handleDeleteTask} onDeleteAssignment={handleDeleteAssignment} isOpen={!!editingTaskId} onStartLinking={(type) => handleStartLinking(editingTaskId, type)} onRemoveDependency={handleRemoveDependency} /></div>}
             {(isAddMeetingPanelOpen && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><AddMeetingModal onClose={() => setIsAddMeetingPanelOpen(false)} onSave={handleAddMeeting} people={projectData.people} /></div>}
             {(editingMeetingId && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><MeetingDetailPanel meetingId={editingMeetingId} projectData={projectData} onSetData={setProjectData} onClose={() => setEditingMeetingId(null)} onDelete={handleDeleteMeeting} onAddJob={handleAddJob} onUpdateJob={handleUpdateJob} onDeleteJob={handleDeleteJob} isOpen={!!editingMeetingId} /></div>}
             <ShortcutHelpModal isOpen={isShortcutHelpOpen} onClose={() => setIsShortcutHelpOpen(false)} />
+            {(saveNotice || restoreError) && (
+                <div role="alert" className="fixed bottom-4 left-1/2 z-[60] flex w-[min(560px,calc(100vw-32px))] -translate-x-1/2 items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-800 shadow-lg dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+                    <span className="flex-1">
+                        {restoreError}
+                        {!restoreError && saveNotice === 'other-tab' && 'This project changed in another tab, so this tab has stopped saving. Reload to see the latest version.'}
+                        {!restoreError && saveNotice === 'save-failed' && "Your latest changes couldn't be saved on this computer. Keep this tab open and free up browser storage."}
+                        {!restoreError && saveNotice === 'load-failed' && "Your saved project couldn't be opened, so the demo was loaded instead. A copy of the saved project was kept in this browser."}
+                    </span>
+                    {saveNotice === 'other-tab' && !restoreError
+                        ? <button type="button" onClick={() => window.location.reload()} className="font-semibold underline">Reload</button>
+                        : <button type="button" onClick={() => { if (restoreError) setRestoreError(null); else dismissNotice(); }} className="font-semibold underline">Dismiss</button>}
+                </div>
+            )}
             {projectData && <TimeframeModal isOpen={isTimeframeModalOpen} onClose={() => setIsTimeframeModalOpen(false)} currentStart={projectData.projectStartDate} currentEnd={projectData.projectEndDate} onSave={(start, end) => setProjectData({...projectData, projectStartDate: start, projectEndDate: end})} />}
-            <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} onSave={handleSaveSettings} defaultLayout={defaultHomeScreenLayout} />
+            <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} onSave={handleSaveSettings} defaultLayout={defaultHomeScreenLayout} projectData={projectData} onSetData={setProjectData} initialPage={settingsInitialPage} />
             {(editingExperimentId && projectData) && <div className="absolute top-0 right-0 h-full w-[480px] z-50 shadow-2xl"><ExperimentDetailPanel experimentId={editingExperimentId} projectData={projectData} onSetData={setProjectData} onClose={() => setEditingExperimentId(null)} onDelete={handleDeleteExperiment} onRemoveLink={handleRemoveExperimentLink} /></div>}
-            <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} screenshotUrl={screenshotUrl} />
-            
-            {/* Floating Feedback Button */}
-            <button
-                id="feedback-trigger-btn"
-                onClick={handleOpenFeedback}
-                className="fixed bottom-6 right-6 z-[45] bg-blue-650 hover:bg-blue-700 text-white rounded-full p-3.5 shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 border border-blue-500/20"
-                title="Send developer feedback"
-            >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 10.742l-2.084 2.083a1.5 1.5 0 102.122 2.122l2.084-2.083M18.364 5.636l-2.083 2.084m0 0L13.12 4.56M16.28 7.72L19.44 4.56M16.28 7.72a3 3 0 11-4.243-4.243m0 0L9.95 5.56" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
-                </svg>
-                <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 ease-out whitespace-nowrap text-sm font-semibold">
-                    Feedback
-                </span>
-            </button>
         </div>
     );
 };

@@ -8,14 +8,14 @@ import { TASK_COLORS } from '../constants';
 import { GoogleCalendarIcon } from './icons/GoogleCalendarIcon';
 import { OutlookIcon } from './icons/OutlookIcon';
 import { SyncArrowsIcon } from './icons/SyncArrowsIcon';
-import CalendarSyncModal from './CalendarSyncModal';
-import { syncWithServerFeed } from '../services/calendarSync';
+import { syncCalendars, useCalendarConnections } from '../hooks/useCalendarConnections';
 
 interface CalendarViewProps {
     projectData: ProjectData;
     onSetData: (data: (prev: ProjectData | null) => ProjectData | null) => void;
     onRequestEditTask: (taskId: string) => void;
     onRequestEditMeeting: (meetingId: string) => void;
+    onOpenCalendarSync: () => void;
 }
 
 type CalendarViewMode = 'month' | 'week' | 'day';
@@ -112,7 +112,7 @@ const InlineMiniCalendar: React.FC<{
                             <button
                                 onClick={() => onDateSelect(date)}
                                 className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors
-                                    ${isSelected ? 'bg-blue-600 text-white font-semibold' : ''}
+                                    ${isSelected ? 'bg-accent text-white font-semibold' : ''}
                                     ${!isSelected && isToday ? 'text-red-500 font-bold' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}
                                 `}
                             >
@@ -134,6 +134,8 @@ const CalendarSidebar: React.FC<{
     onOpenSyncModal: () => void;
     counts: { tasks: number; meetings: number; google: number; outlook: number };
 }> = ({ currentDate, onDateSelect, visibleCalendars, onToggleCalendar, onOpenSyncModal, counts }) => {
+    const { connections } = useCalendarConnections();
+    const connectedNames = [connections.google.status === 'connected' && 'Google Calendar', connections.outlook.status === 'connected' && 'Outlook'].filter(Boolean);
     return (
         <div className="w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/50 flex flex-col h-full overflow-y-auto hidden md:flex">
             <InlineMiniCalendar currentDate={currentDate} onDateSelect={onDateSelect} />
@@ -141,14 +143,6 @@ const CalendarSidebar: React.FC<{
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Calendars</h3>
-                    <button
-                        id="calendar-sync-sidebar-btn"
-                        onClick={onOpenSyncModal}
-                        className="text-[11px] font-semibold text-[#ef754e] hover:underline flex items-center gap-1"
-                    >
-                        <SyncArrowsIcon className="w-3 h-3" />
-                        Sync
-                    </button>
                 </div>
                 <div className="space-y-2">
                     <button 
@@ -201,19 +195,18 @@ const CalendarSidebar: React.FC<{
                 <div className="p-3 rounded-xl bg-orange-50/70 dark:bg-gray-800 border border-orange-200/60 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-1.5">
                         <span className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Live Sync Active
+                            <span className={`w-2 h-2 rounded-full ${connectedNames.length > 0 ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
+                            {connectedNames.length > 0 ? 'Calendar connected' : 'Not connected'}
                         </span>
-                        <span className="text-[10px] font-medium text-gray-500">2-Way</span>
                     </div>
                     <p className="text-[11px] text-gray-600 dark:text-gray-400 mb-2.5 leading-snug">
-                        Syncs tasks & meetings with Google Calendar and Outlook.
+                        {connectedNames.length > 0 ? `Syncing with ${connectedNames.join(' and ')}.` : 'Connect Google Calendar or Outlook to sync your work.'}
                     </p>
                     <button
                         onClick={onOpenSyncModal}
                         className="w-full py-1.5 px-3 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-700 dark:text-gray-200 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                        <SyncArrowsIcon className="w-3.5 h-3.5 text-[#ef754e]" />
+                        <SyncArrowsIcon className="w-3.5 h-3.5 text-accent" />
                         <span>Manage Calendar Sync</span>
                     </button>
                 </div>
@@ -738,9 +731,9 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
     const [visibleCalendars, setVisibleCalendars] = useState({ tasks: true, meetings: true, google: true, outlook: true });
-    const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
-    const [isSyncing, setIsSyncing] = useState(false);
-    const [syncToast, setSyncToast] = useState<string | null>(null);
+    const { connections, isSyncing } = useCalendarConnections();
+    const [syncToast, setSyncToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const hasConnection = connections.google.status === 'connected' || connections.outlook.status === 'connected';
 
     // Dynamic item counts by source
     const counts = useMemo(() => {
@@ -753,16 +746,14 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
     }, [props.projectData]);
 
     const handleQuickSync = async () => {
-        setIsSyncing(true);
-        try {
-            const res = await syncWithServerFeed(props.projectData);
-            setSyncToast(`Synced ${res.itemsCount} items to Google & Outlook feed`);
-            setTimeout(() => setSyncToast(null), 3500);
-        } catch (e: any) {
-            setSyncToast('Sync: ' + (e.message || 'Updated feed'));
-            setTimeout(() => setSyncToast(null), 3500);
-        } finally {
-            setIsSyncing(false);
+        if (!hasConnection) {
+            props.onOpenCalendarSync();
+            return;
+        }
+        const message = await syncCalendars(() => props.projectData, props.onSetData);
+        if (message) {
+            setSyncToast(message);
+            setTimeout(() => setSyncToast(null), 5000);
         }
     };
 
@@ -818,7 +809,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                 onDateSelect={(d) => { setCurrentDate(d); setViewMode('day'); }}
                 visibleCalendars={visibleCalendars}
                 onToggleCalendar={handleToggleCalendar}
-                onOpenSyncModal={() => setIsSyncModalOpen(true)}
+                onOpenSyncModal={props.onOpenCalendarSync}
                 counts={counts}
             />
 
@@ -865,26 +856,25 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                     {/* Right Tools: Calendar Sync & Quick Trigger */}
                     <div className="w-1/3 flex justify-end items-center gap-2">
                         {syncToast && (
-                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 px-3 py-1 rounded-full animate-fade-in flex items-center gap-1.5 shadow-sm">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                                {syncToast}
+                            <span role="status" className={`text-xs font-semibold ${syncToast.type === 'success' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800' : 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/80 border border-red-200 dark:border-red-800'} px-3 py-1 rounded-full animate-fade-in flex items-center gap-1.5 shadow-sm`}>
+                                {syncToast.text}
                             </span>
                         )}
 
                         <button
                             onClick={handleQuickSync}
                             disabled={isSyncing}
-                            title="Sync project with Google Calendar & Outlook feed"
+                            title={hasConnection ? 'Sync with your connected calendars' : 'Connect a calendar to sync'}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-200 transition-all shadow-sm disabled:opacity-50"
                         >
-                            <SyncArrowsIcon className={`w-3.5 h-3.5 text-[#ef754e] ${isSyncing ? 'animate-spin' : ''}`} />
+                            <SyncArrowsIcon className={`w-3.5 h-3.5 text-accent ${isSyncing ? 'animate-spin' : ''}`} />
                             <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
                         </button>
 
                         <button
                             id="calendar-sync-main-btn"
-                            onClick={() => setIsSyncModalOpen(true)}
-                            className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#ef754e] hover:bg-[#e0643d] text-white text-xs font-semibold shadow-sm transition-all"
+                            onClick={props.onOpenCalendarSync}
+                            className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-semibold shadow-sm transition-all"
                         >
                             <div className="flex items-center -space-x-1">
                                 <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center p-0.5 shadow-sm">
@@ -895,7 +885,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                                 </div>
                             </div>
                             <span>Calendar Sync</span>
-                            <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
+                            {hasConnection && <span className="w-2 h-2 rounded-full bg-emerald-300"></span>}
                         </button>
                     </div>
                 </header>
@@ -936,14 +926,6 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                     )}
                 </div>
             </div>
-
-            {/* Calendar Synchronization Modal */}
-            <CalendarSyncModal
-                isOpen={isSyncModalOpen}
-                onClose={() => setIsSyncModalOpen(false)}
-                projectData={props.projectData}
-                onSetData={props.onSetData}
-            />
         </div>
     );
 };
